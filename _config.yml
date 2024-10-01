@@ -15,7 +15,6 @@ timezone:
 ## If your site is put in a subdirectory, set url as 'http://example.com/child' and root as '/child/'
 #url: https://haojen.github.io/Claudia-theme-blog/
 url: https://zincv.com
-root: /Claudia-theme-blog/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
