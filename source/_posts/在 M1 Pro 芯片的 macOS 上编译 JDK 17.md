@@ -5,7 +5,7 @@ tags:
   - macos
 ---
 
-!(jdk17u)[https://zincv.oss-cn-hangzhou.aliyuncs.com/Snipaste_2024-10-01_16-33-12.png]
+![jdk17u](https://zincv.oss-cn-hangzhou.aliyuncs.com/Snipaste_2024-10-01_16-33-12.png)
 
 ## 为什么编译jdk17u这个版本
 
