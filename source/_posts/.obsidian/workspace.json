@@ -1,0 +1,167 @@
+{
+  "main": {
+    "id": "0318e18396c3f96e",
+    "type": "split",
+    "children": [
+      {
+        "id": "6df61e0a7785eb4c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d0e2d166c3beb6a4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "hello-world.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "839d1cf9a4ccca31",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "4642b44c871eedab",
+    "type": "split",
+    "children": [
+      {
+        "id": "7259fa8f0029707b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bf1d23d819f77828",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "87b7fc82a6b4ef6c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "f1820411876918c2",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d1ace45bb60abbf2",
+    "type": "split",
+    "children": [
+      {
+        "id": "8bea52979f7863a8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "149928fb27a3303e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "5291fbe268522445",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "48c8f751ffa03f51",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "cad29a1e7faa2c3b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "839d1cf9a4ccca31",
+  "lastOpenFiles": [
+    "hello-world.md",
+    "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md"
+  ]
+}
