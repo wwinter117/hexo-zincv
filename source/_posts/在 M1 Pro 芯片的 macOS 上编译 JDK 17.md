@@ -4,6 +4,9 @@ tags:
   - jdk
   - macos
 ---
+
+!(jdk17u)[https://zincv.oss-cn-hangzhou.aliyuncs.com/Snipaste_2024-10-01_16-33-12.png]
+
 ## 为什么编译jdk17u这个版本
 
 `JDK 8` 最早发布时，主要支持的是 `x86` 和 `x64` 架构的系统。`Apple M1 Pro` 芯片使用的是 `AArch64` 架构，而 `JDK 8` 并没有对 `macOS/AArch64` 提供原生支持，需要使用`Rosetta 2` 转译工具在 `M1 Pro `芯片上运行基于 `x86_64` 架构的 `JDK 8`。
