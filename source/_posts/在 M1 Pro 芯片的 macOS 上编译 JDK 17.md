@@ -13,6 +13,8 @@ tags:
 
 `JDK 17` 已经为 `macOS/AArch64` 提供了原生支持，性能和兼容性都更好。
 
+
+
 - [JEP 306: Restore Always-Strict Floating-Point Semantics](https://openjdk.java.net/jeps/306)
 - [JEP 356: Enhanced Pseudo-Random Number Generators](https://openjdk.java.net/jeps/356)
 - [JEP 382: New macOS Rendering Pipeline](https://openjdk.java.net/jeps/382)
