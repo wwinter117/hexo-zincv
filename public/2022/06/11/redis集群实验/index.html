@@ -1,0 +1,188 @@
+<!DOCTYPE html><html class="appearance-auto" lang="zh-CN"><head><meta charset="UTF-8"><title>redis集群实验</title><meta name="description" content="Let's go"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><link rel="stylesheet" href="/style/common/jquery.fancybox.min.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="在前一篇博客中，介绍了如何在 Ubuntu 上使用 Docker 搭建 Redis 6.0.0 集群。搭建完成后，接下来我们可以进行一些实验，来对 Redis 集群的工作原理和新特性进行一个初步认识。本文将介绍如何通过一些常见的实验来测试和验证 Redis 集群的功能，包括数据分片、故障转移、主从同步等等
+环境准备在进行以下实验之前，确保已经按照前文的方法成功搭建了一个包含6个节点的Redis 6.0.0 集群。
+实验一：数据分片实验目的验证 Redis 集群如何在不同节点间分片存储数据。
+实验步骤
+使用 redis-cli 连接到集群中的某一个节点：
+
+zhangdongdong:~/ $ docker exec -it redis-1 redis-cli -c -p 6371
+
+
+插入一些键值对，观察它.."><meta name="generator" content="Hexo 7.3.0"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Zhangdd's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">redis集群实验</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">点击返回顶部</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%80%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%88%86%E7%89%87"><span class="toc-text">实验一：数据分片</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%9B%AE%E7%9A%84"><span class="toc-text">实验目的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%AD%A5%E9%AA%A4"><span class="toc-text">实验步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BA%8C%EF%BC%9A%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="toc-text">实验二：故障转移</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%9B%AE%E7%9A%84-1"><span class="toc-text">实验目的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%AD%A5%E9%AA%A4-1"><span class="toc-text">实验步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%89%EF%BC%9A%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5"><span class="toc-text">实验三：主从同步</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%9B%AE%E7%9A%84-2"><span class="toc-text">实验目的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%AD%A5%E9%AA%A4-2"><span class="toc-text">实验步骤</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/redis"><i class="tag post-item-tag">redis</i></a><a href="/tags/%E5%AE%9E%E9%AA%8C"><i class="tag post-item-tag">实验</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">redis集群实验</h1><time class="has-text-grey" datetime="2022-06-11T14:46:49.000Z">2022-06-11</time><article class="mt-2 post-content"><p>在前一篇博客中，介绍了如何在 <code>Ubuntu</code> 上使用 <code>Docker</code> 搭建 <code>Redis 6.0.0</code> 集群。搭建完成后，接下来我们可以进行一些实验，来对 <code>Redis</code> 集群的工作原理和新特性进行一个初步认识。本文将介绍如何通过一些常见的实验来测试和验证 <code>Redis</code> 集群的功能，包括数据分片、故障转移、主从同步等等</p>
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p>在进行以下实验之前，确保已经按照前文的方法成功搭建了一个包含6个节点的<code>Redis 6.0.0</code> 集群。</p>
+<h2 id="实验一：数据分片"><a href="#实验一：数据分片" class="headerlink" title="实验一：数据分片"></a>实验一：数据分片</h2><h3 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h3><p>验证 <code>Redis</code> 集群如何在不同节点间分片存储数据。</p>
+<h3 id="实验步骤"><a href="#实验步骤" class="headerlink" title="实验步骤"></a>实验步骤</h3><ol>
+<li>使用 <code>redis-cli</code> 连接到集群中的某一个节点：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-1 redis-cli -c -p 6371</code></pre>
+
+<ol start="2">
+<li>插入一些键值对，观察它们在不同节点间的分布：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-1 redis-cli -c -p 6371     
+127.0.0.1:6371&gt; SET key1 <span class="hljs-string">&quot;value1&quot;</span>
+-&gt; Redirected to slot [9189] located at 127.0.0.1:6372
+OK
+127.0.0.1:6372&gt; SET key2 <span class="hljs-string">&quot;value2&quot;</span>
+-&gt; Redirected to slot [4998] located at 127.0.0.1:6371
+OK
+127.0.0.1:6371&gt; SET key3 <span class="hljs-string">&quot;value3&quot;</span>
+OK
+127.0.0.1:6371&gt; SET key4 <span class="hljs-string">&quot;value4&quot;</span>
+-&gt; Redirected to slot [13120] located at 127.0.0.1:6373
+OK
+127.0.0.1:6373&gt; SET key5 <span class="hljs-string">&quot;value5&quot;</span>
+-&gt; Redirected to slot [9057] located at 127.0.0.1:6372
+OK
+127.0.0.1:6372&gt; CLUSTER KEYSLOT key1
+(<span class="hljs-built_in">integer</span>) 9189
+127.0.0.1:6372&gt; CLUSTER KEYSLOT key2
+(<span class="hljs-built_in">integer</span>) 4998
+127.0.0.1:6372&gt; CLUSTER KEYSLOT key3
+(<span class="hljs-built_in">integer</span>) 935
+127.0.0.1:6372&gt; CLUSTER KEYSLOT key4
+(<span class="hljs-built_in">integer</span>) 13120
+127.0.0.1:6372&gt; CLUSTER KEYSLOT key5
+(<span class="hljs-built_in">integer</span>) 9057
+127.0.0.1:6372&gt;</code></pre>
+
+<ul>
+<li>设置键值对 <code>key1</code>:</li>
+</ul>
+<p><code>Redis</code> 计算出 <code>key1</code> 应该存储在哈希槽 <code>9189</code>。当前连接的是 <code>127.0.0.1:6371</code>，但哈希槽 <code>9189</code> 归属于节点 <code>127.0.0.1:6372</code>，因此 <code>Redis</code> 自动将请求重定向到 <code>127.0.0.1:6372</code> 节点，并在该节点上存储 <code>key1</code>。</p>
+<ul>
+<li>设置键值对 <code>key2</code>:</li>
+</ul>
+<p><code>Redis</code> 计算出 <code>key2</code> 应该存储在哈希槽 <code>4998</code>，这个哈希槽归属于当前连接的节点 <code>127.0.0.1:6371</code>，因此数据直接存储在 <code>127.0.0.1:6371</code>，没有进行重定向。</p>
+<ul>
+<li>设置键值对 <code>key3</code>:</li>
+</ul>
+<p>被分配到的哈希槽同样位于节点 <code>127.0.0.1:6371</code>，因此数据直接存储在该节点，无需重定向。</p>
+<ul>
+<li>设置键值对 <code>key4</code>:</li>
+</ul>
+<p><code>Redis</code> 计算出 <code>key4</code> 应该存储在哈希槽 <code>13120</code>，该哈希槽归属于节点 <code>127.0.0.1:6373</code>，因此数据被重定向到 <code>127.0.0.1:6373</code> 并存储在那里。</p>
+<ul>
+<li>设置键值对 <code>key5</code>:</li>
+</ul>
+<p><code>key5</code> 被分配到的哈希槽 <code>9057</code> 位于节点 <code>127.0.0.1:6372</code>，因此请求被重定向到该节点并存储数据。</p>
+<ul>
+<li>检查哈希槽分配:</li>
+</ul>
+<p>使用 <code>CLUSTER KEYSLOT</code> 命令可以查询每个键对应的哈希槽编号。通过哈希槽编号，<code>Redis</code> 决定每个键值对应该存储在哪个节点上。这展示了 <code>Redis</code> 集群如何通过哈希槽将数据均匀分布在不同的节点上。</p>
+<p><strong>总结：</strong></p>
+<p><code>Redis</code> 集群通过哈希槽（共16384个）将数据分配到不同的节点上。每个键被哈希后对应一个哈希槽编号，<code>Redis</code> 根据哈希槽编号确定数据的存储节点。这种分片机制保证了集群的横向扩展能力，即使数据量增加，集群也能够有效地分散负载，确保高效运行。</p>
+<h2 id="实验二：故障转移"><a href="#实验二：故障转移" class="headerlink" title="实验二：故障转移"></a>实验二：故障转移</h2><h3 id="实验目的-1"><a href="#实验目的-1" class="headerlink" title="实验目的"></a>实验目的</h3><p>验证 <code>Redis</code> 集群的自动故障转移能力，当一个主节点失效时，从节点是否能够自动接管。</p>
+<h3 id="实验步骤-1"><a href="#实验步骤-1" class="headerlink" title="实验步骤"></a>实验步骤</h3><ol>
+<li>找到一个主节点，并停止该节点的容器：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker stop redis-1                              
+redis-1</code></pre>
+
+<ol start="2">
+<li>等待几秒钟后，查看集群状态，验证新的主节点是否已自动选出：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-2 redis-cli -p 6372 CLUSTER NODES 
+d0f53aca9ceefb82026d395e825a39554bc4280f 127.0.0.1:6376@16376 slave 0e2a32d078ecc37ae1126e658953fc790fe04fff 0 1724588629137 6 connected
+
+f0a458466e522417340d66773def7b8ca596a96e 127.0.0.1:6375@16375 slave 23ace6314d5bfc6630ea02c2d86083140bdd48a7 0 1724588628110 5 connected
+
+23ace6314d5bfc6630ea02c2d86083140bdd48a7 127.0.0.1:6372@16372 myself,master - 0 1724588628000 2 connected 5461-10922
+
+0e2a32d078ecc37ae1126e658953fc790fe04fff 127.0.0.1:6373@16373 master - 0 1724588628625 3 connected 10923-16383
+
+2aa62f953d746c7ee36c8c79282dcf79a75375d9 127.0.0.1:6374@16374 master - 0 1724588628110 7 connected 0-5460
+
+eb921b7aad0b10aed38006870d849bc7572cb1fa 127.0.0.1:6371@16371 master,fail - 1724588614566 1724588612000 1 disconnected</code></pre>
+
+<p><strong>详细分析：</strong></p>
+<p><strong>节点 127.0.0.1:6371 状态</strong></p>
+<ul>
+<li><p>节点ID：<code>eb921b7aad0b10aed38006870d849bc7572cb1fa</code></p>
+</li>
+<li><p>状态：<code>master,fail - 1724588614566 1724588612000 1 disconnected</code></p>
+</li>
+<li><p>分析: 该节点原为主节点，但现在显示为 <code>fail</code> 状态，这意味着集群检测到它已失效并断开连接。这是因为在之前的步骤中停止了 <code>redis-1</code> 容器。由于这个节点负责哈希槽 <code>0-5460</code>，这些槽的数据需要通过集群的故障转移机制进行接管。</p>
+</li>
+</ul>
+<p><strong>节点 127.0.0.1:6372 状态</strong></p>
+<ul>
+<li><p>节点ID：<code>23ace6314d5bfc6630ea02c2d86083140bdd48a7</code></p>
+</li>
+<li><p>状态：<code>myself,master - 0 1724588628000 2 connected 5461-10922</code></p>
+</li>
+<li><p>分析: 该节点显示为 <code>myself</code>,<code>master</code>，表示这是当前连接的节点，并且它是主节点，负责哈希槽 <code>5461-10922</code>。这个节点在集群中的状态为 <code>connected</code>，说明它正常工作。</p>
+</li>
+</ul>
+<p><strong>节点 127.0.0.1:6373 状态</strong></p>
+<ul>
+<li><p>节点ID：<code>0e2a32d078ecc37ae1126e658953fc790fe04fff</code></p>
+</li>
+<li><p>状态：<code>master - 0 1724588628625 3 connected 10923-16383</code></p>
+</li>
+<li><p>分析: 该节点是集群中的另一个主节点，负责哈希槽 <code>10923-16383</code>，状态为 <code>connected</code>，表明正常工作。</p>
+</li>
+</ul>
+<p><strong>节点 127.0.0.1:6374 状态</strong></p>
+<ul>
+<li><p>节点ID：<code>2aa62f953d746c7ee36c8c79282dcf79a75375d9</code></p>
+</li>
+<li><p>状态：<code>master - 0 1724588628110 7 connected 0-5460</code></p>
+</li>
+<li><p>分析: 该节点现在接管了哈希槽 <code>0-5460</code>，这部分槽原本属于已失败的 <code>127.0.0.1:6371</code>。这说明集群中的故障转移机制已运行，将原 <code>6371</code> 的主节点职责转移到 <code>6374</code> 以保证集群的正常运行。</p>
+</li>
+</ul>
+<p><strong>从节点状态</strong></p>
+<p><code>127.0.0.1:6375</code> 和 <code>127.0.0.1:6376</code> 均为从节点，它们各自复制主节点的数据，并在集群中保持 <code>connected</code> 状态。</p>
+<p><strong>哈希槽 0-5460 由原来的 127.0.0.1:6371 转移到了 127.0.0.1:6374，这就是故障转移机制的体现。</strong></p>
+<h2 id="实验三：主从同步"><a href="#实验三：主从同步" class="headerlink" title="实验三：主从同步"></a>实验三：主从同步</h2><h3 id="实验目的-2"><a href="#实验目的-2" class="headerlink" title="实验目的"></a>实验目的</h3><p>验证 <code>Redis</code> 集群中主从节点的数据同步机制。</p>
+<h3 id="实验步骤-2"><a href="#实验步骤-2" class="headerlink" title="实验步骤"></a>实验步骤</h3><p>刚才我们停止了 <code>redis-1</code> 容器，现在重新运行</p>
+<pre><code class="hljs Bash">zhangdongdong:~/ $ docker start redis-1                             
+redis-1</code></pre>
+
+<ol>
+<li>找到一个主节点和其对应的从节点。可以通过 <code>CLUSTER NODES</code> 命令查看主从关系：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-1 redis-cli -p 6371 CLUSTER NODES  
+
+f0a458466e522417340d66773def7b8ca596a96e 127.0.0.1:6375@16375 slave 23ace6314d5bfc6630ea02c2d86083140bdd48a7 0 1724589362522 5 connected
+
+23ace6314d5bfc6630ea02c2d86083140bdd48a7 127.0.0.1:6372@16372 master - 0 1724589362523 2 connected 5461-10922
+
+2aa62f953d746c7ee36c8c79282dcf79a75375d9 127.0.0.1:6374@16374 master - 0 1724589363040 7 connected 0-5460
+
+d0f53aca9ceefb82026d395e825a39554bc4280f 127.0.0.1:6376@16376 slave 0e2a32d078ecc37ae1126e658953fc790fe04fff 0 1724589363552 6 connected
+
+eb921b7aad0b10aed38006870d849bc7572cb1fa 127.0.0.1:6371@16371 myself,slave 2aa62f953d746c7ee36c8c79282dcf79a75375d9 0 1724589362000 1 connected
+
+0e2a32d078ecc37ae1126e658953fc790fe04fff 127.0.0.1:6373@16373 master - 0 1724589361495 3 connected 10923-16383</code></pre>
+
+<p>总结以上主从关系:</p>
+<p><code>master</code> 主节点：<code>6372</code> <code>6373</code> <code>6374</code> </p>
+<p><code>slave</code> 从节点：<code>6371</code> <code>6375</code> <code>6376</code></p>
+<ol start="2">
+<li>在主节点上 <code>6372</code> 写入数据：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-2 redis-cli -p 6372 SET mykey <span class="hljs-string">&quot;myvalue&quot;</span>                                                    
+(error) MOVED 14687 127.0.0.1:6373
+zhangdongdong:~/ $</code></pre>
+
+<p>发现返回错误：<code>(error) MOVED 14687 127.0.0.1:6373</code>，说明当前 <code>key</code> <code>被映射到6373</code> 节点，所以我们可以换到 <code>6373</code> 进行写入</p>
+<pre><code class="hljs Bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-3 redis-cli -p 6373 SET mykey <span class="hljs-string">&quot;myvalue&quot;</span>                                                    
+OK
+zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-3 redis-cli -p 6373 GET mykey                                                              
+<span class="hljs-string">&quot;myvalue&quot;</span>
+zhangdongdong:~/ $</code></pre>
+
+<p>成功</p>
+<ol start="3">
+<li>在对应的从节点上检查数据是否已经同步：</li>
+</ol>
+<pre><code class="hljs bash">zhangdongdong:~/ $ docker <span class="hljs-built_in">exec</span> -it redis-6 redis-cli -p 6376        
+127.0.0.1:6376&gt; KEYS *
+1) <span class="hljs-string">&quot;mykey&quot;</span>
+2) <span class="hljs-string">&quot;key4&quot;</span>
+127.0.0.1:6376&gt;</code></pre>
+
+<p>可以看见从节点 <code>redis-6</code> 已经有了在主节点 <code>redis-2</code> 添加的 <code>key4</code></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2022/06/12/redis%E6%8C%81%E4%B9%85%E5%8C%96%E6%80%BB%E7%BB%93/" title="redis持久化总结"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">上一页: redis持久化总结</span></a><a class="button is-default" href="/2022/05/26/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BAredids%E9%9B%86%E7%BE%A4%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83/" title="使用docker快速搭建redids集群实验环境"><span class="has-text-weight-semibold">下一页: 使用docker快速搭建redids集群实验环境</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Zhangdd/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/wwinter117"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Zhangdd 2021 - 2024</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="site author" target="_blank" rel="noopener" href="//github.com/wwinter117">Hosted by Zhangdd&nbsp;</a></p><!--div(style="margin-top: 2px")--><!--  a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")--></div><div><span>浙备7837-534598</span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/jquery-3.6.1.min.js"></script><script src="/js/jquery-fancybox.min.js"></script><script src="/js/img_zoom.js"></script><script src="/js/post.js"></script></body></html>

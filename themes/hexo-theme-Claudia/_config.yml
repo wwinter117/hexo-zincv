@@ -13,18 +13,18 @@ widgets:
 
 # social config
 social:
-  zhihu:
-  twitter: /
-  facebook: /
-  linkedin:
-  instagram: /
+#  zhihu:
+#  twitter: /
+#  facebook: /
+#  linkedin:
+#  instagram: /
   github: wwinter117
 
 user:
   name: Zhangdd
   avatar: https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_2307.JPG
-  location: In the dust
-  description: May the Force be with you
+  location: 浙江·杭州
+  description: Let's go
   footnotes: 浙备7837-534598
 
 # documents: https://github.com/utterance/utterances
@@ -54,14 +54,14 @@ appearance: auto # Default value is auto
 favicon: https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg
 
 friend_links:
-  - title: Google
-    link: https://www.google.com/
+#  - title: Google
+#    link: https://www.google.com/
   - title: Github
     link: https://github.com/wwinter117/
-  - title: V2EX
-    link: https://v2ex.com/
-  - title: Twitter
-    link: https://twitter.com/
+#  - title: V2EX
+#    link: https://v2ex.com/
+#  - title: Twitter
+#    link: https://twitter.com/
 
 # Google Analytics
 ga_track_id:

@@ -1,0 +1,140 @@
+<!DOCTYPE html><html class="appearance-auto" lang="zh-CN"><head><meta charset="UTF-8"><title>oom异常实例</title><meta name="description" content="Let's go"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><link rel="stylesheet" href="/style/common/jquery.fancybox.min.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="
+1. 堆溢出测试代码：
+package cn.wwinter;  
+  
+import java.util.ArrayList;  
+import java.util.List;  
+  
+public class HeapOOM &amp;#123;  
+    static class OOMObject &amp;#123;  
+    &amp;#125;  
+    public static void main(String[] args) &amp;#123;  
+        List&amp;lt;OOMObject&amp;gt; list = new ArrayList&amp;lt;&amp;gt;();  
+        while (true) &amp;#123;  
+            list.add(new OOMObject()).."><meta name="generator" content="Hexo 7.3.0"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Zhangdd's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">oom异常实例</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">点击返回顶部</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%A0%86%E6%BA%A2%E5%87%BA"><span class="toc-text">1. 堆溢出</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-cn-wwinter-HeapOOM-OOMObject-%E7%B1%BB%E7%9A%84%E5%AE%9E%E4%BE%8B%E6%95%B0%E9%87%8F"><span class="toc-text">1. cn.wwinter.HeapOOM$OOMObject 类的实例数量</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-java-lang-Object-%E5%92%8C-byte-%E7%9A%84%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8"><span class="toc-text">2. java.lang.Object[] 和 byte[] 的内存占用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%88%96%E5%A4%A7%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E7%9A%84%E6%A0%B9%E6%9C%AC%E5%8E%9F%E5%9B%A0"><span class="toc-text">3. 内存泄漏或大内存消耗的根本原因</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%A0%88%E6%BA%A2%E5%87%BA"><span class="toc-text">2.  栈溢出</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%96%B9%E6%B3%95%E5%8C%BA%E6%BA%A2%E5%87%BA%EF%BC%88%E9%80%9A%E5%B8%B8%E4%B8%8E%E5%85%83%E7%A9%BA%E9%97%B4%E6%9C%89%E5%85%B3%EF%BC%89"><span class="toc-text">3.  方法区溢出（通常与元空间有关）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%EF%BC%9A%E6%96%B9%E6%B3%95%E5%8C%BA%E6%BA%A2%E5%87%BA%EF%BC%88%E5%85%83%E7%A9%BA%E9%97%B4%E6%BA%A2%E5%87%BA%EF%BC%89"><span class="toc-text">示例代码：方法区溢出（元空间溢出）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%B4%E6%98%8E%EF%BC%9A"><span class="toc-text">说明：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0%E6%BA%A2%E5%87%BA"><span class="toc-text">4. 运行时常量池溢出</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%EF%BC%9A%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0%E6%BA%A2%E5%87%BA"><span class="toc-text">示例代码：运行时常量池溢出</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%B4%E6%98%8E%EF%BC%9A-1"><span class="toc-text">说明：</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/jdk"><i class="tag post-item-tag">jdk</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">oom异常实例</h1><time class="has-text-grey" datetime="2022-08-01T14:46:49.000Z">2022-08-01</time><article class="mt-2 post-content"><p><img src="https://zincv.oss-cn-hangzhou.aliyuncs.com/images/oom-Pasted%20image%2020240909195755.png"></p>
+<h3 id="1-堆溢出"><a href="#1-堆溢出" class="headerlink" title="1. 堆溢出"></a>1. 堆溢出</h3><p>测试代码：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package</span> cn.wwinter;  
+  
+<span class="hljs-keyword">import</span> java.util.ArrayList;  
+<span class="hljs-keyword">import</span> java.util.List;  
+  
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">HeapOOM</span> &#123;  
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OOMObject</span> &#123;  
+    &#125;  
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;  
+        List&lt;OOMObject&gt; list = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();  
+        <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;  
+            list.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">OOMObject</span>());  
+        &#125;  
+    &#125;  
+&#125;</code></pre>
+
+<p>执行：<code>java -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError HeapOOM.java</code>： </p>
+<ul>
+<li><code>-Xms20m</code>：设置 <code>JVM</code> 初始堆内存大小为 <code>20MB</code>。</li>
+<li><code>-Xmx20m</code>：设置 <code>JVM</code> 最大堆内存大小为 <code>20MB</code>。</li>
+<li><code>-XX:+HeapDumpOnOutOfMemoryError</code>：当堆内存溢出时，<code>JVM</code> 会生成一个堆转储文件（<code>.hprof</code> 文件），用于后续的内存分析。</li>
+</ul>
+<pre><code class="hljs bash">zhangdongdong:wwinter/ (master✗) $ java -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError HeapOOM.java                                                                   [19:51:00]
+java.lang.OutOfMemoryError: Java heap space
+Dumping heap to java_pid18144.hprof ...
+Heap dump file created [34168105 bytes <span class="hljs-keyword">in</span> 0.052 secs]
+Exception <span class="hljs-keyword">in</span> thread <span class="hljs-string">&quot;main&quot;</span> java.lang.OutOfMemoryError: Java heap space
+        at java.base/java.util.Arrays.copyOf(Arrays.java:3512)
+        at java.base/java.util.Arrays.copyOf(Arrays.java:3481)
+        at java.base/java.util.ArrayList.grow(ArrayList.java:237)
+        at java.base/java.util.ArrayList.grow(ArrayList.java:244)
+        at java.base/java.util.ArrayList.add(ArrayList.java:454)
+        at java.base/java.util.ArrayList.add(ArrayList.java:467)
+        at cn.wwinter.HeapOOM.main(HeapOOM.java:13)</code></pre>
+
+
+<p><img src="https://zincv.oss-cn-hangzhou.aliyuncs.com/images/oom-Pasted%20image%2020240909195755.png"></p>
+<p>从堆转储文件来看，有以下几个关键点：</p>
+<h5 id="1-cn-wwinter-HeapOOM-OOMObject-类的实例数量"><a href="#1-cn-wwinter-HeapOOM-OOMObject-类的实例数量" class="headerlink" title="1. cn.wwinter.HeapOOM$OOMObject 类的实例数量"></a>1. <code>cn.wwinter.HeapOOM$OOMObject</code> 类的实例数量</h5><ul>
+<li>该类的实例数量达到了 <strong>810,326</strong> 个，占用了 <strong>12.97 MB</strong> 的内存。</li>
+</ul>
+<h5 id="2-java-lang-Object-和-byte-的内存占用"><a href="#2-java-lang-Object-和-byte-的内存占用" class="headerlink" title="2. java.lang.Object[] 和 byte[] 的内存占用"></a>2. <code>java.lang.Object[]</code> 和 <code>byte[]</code> 的内存占用</h5><ul>
+<li><code>java.lang.Object[]</code> 占用了 <strong>17.07 MB</strong>。</li>
+<li><code>byte[]</code> 占用了 <strong>728.21 KB</strong>。</li>
+</ul>
+<h5 id="3-内存泄漏或大内存消耗的根本原因"><a href="#3-内存泄漏或大内存消耗的根本原因" class="headerlink" title="3. 内存泄漏或大内存消耗的根本原因"></a>3. 内存泄漏或大内存消耗的根本原因</h5><ul>
+<li>从分析结果来看，最大的内存消耗者是 <code>cn.wwinter.HeapOOM$OOMObject</code>，这表明代码中的 <code>list.add(new OOMObject());</code> 是导致堆内存溢出的主要原因。</li>
+</ul>
+<h3 id="2-栈溢出"><a href="#2-栈溢出" class="headerlink" title="2.  栈溢出"></a>2.  栈溢出</h3><pre><code class="hljs java"><span class="hljs-keyword">package</span> cn.wwinter;  
+  
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">JavaVMStackSOF</span> &#123;  
+    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">stackLength</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;  
+  
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">stackLeak</span><span class="hljs-params">()</span> &#123;  
+        stackLength++;  
+        stackLeak();  
+    &#125;  
+  
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;  
+        <span class="hljs-type">JavaVMStackSOF</span> <span class="hljs-variable">sof</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">JavaVMStackSOF</span>();  
+        <span class="hljs-keyword">try</span> &#123;  
+            sof.stackLeak();  
+        &#125; <span class="hljs-keyword">catch</span> (Throwable e) &#123;  
+            System.out.println(<span class="hljs-string">&quot;stack length: &quot;</span> + sof.stackLength);  
+            <span class="hljs-keyword">throw</span> e;  
+        &#125;  
+    &#125;  
+&#125;</code></pre>
+
+<pre><code class="hljs bash">stack length: 36574
+Exception <span class="hljs-keyword">in</span> thread <span class="hljs-string">&quot;main&quot;</span> java.lang.StackOverflowError
+	at cn.wwinter.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:8)
+	at cn.wwinter.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:8)
+	at cn.wwinter.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:8)</code></pre>
+
+<h3 id="3-方法区溢出（通常与元空间有关）"><a href="#3-方法区溢出（通常与元空间有关）" class="headerlink" title="3.  方法区溢出（通常与元空间有关）"></a>3.  方法区溢出（通常与元空间有关）</h3><p>在 <code>Java 8</code> 及以后的版本中，方法区已经被移到元空间（<code>Metaspace</code>），而在 <code>Java 7</code> 及以前，方法区包含在永久代（<code>PermGen</code>）中。以下代码通过动态生成大量类，导致方法区溢出：</p>
+<h4 id="示例代码：方法区溢出（元空间溢出）"><a href="#示例代码：方法区溢出（元空间溢出）" class="headerlink" title="示例代码：方法区溢出（元空间溢出）"></a>示例代码：方法区溢出（元空间溢出）</h4><pre><code class="hljs java"><span class="hljs-keyword">import</span> net.sf.cglib.proxy.Enhancer;  
+<span class="hljs-keyword">import</span> net.sf.cglib.proxy.MethodInterceptor;  
+  
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MetaspaceOOM</span> &#123;  
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;  
+        <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;  
+            <span class="hljs-type">Enhancer</span> <span class="hljs-variable">enhancer</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Enhancer</span>();  
+            enhancer.setSuperclass(MetaspaceOOM.class);  
+            enhancer.setUseCache(<span class="hljs-literal">false</span>);  
+            enhancer.setCallback((MethodInterceptor) (obj, method, args1, proxy) -&gt; proxy.invokeSuper(obj, args1));  
+            enhancer.create();  
+        &#125;  
+    &#125;  
+&#125;</code></pre>
+
+<h4 id="说明："><a href="#说明：" class="headerlink" title="说明："></a>说明：</h4><ul>
+<li><p>这个代码使用  <code>CGLIB</code>  动态生成了大量的类，并不断地将这些类加载到 <code>JVM</code> 中，导致元空间（<code>Metaspace</code>）溢出。</p>
+</li>
+<li><p>运行时可以使用以下 <code>JVM</code> 参数来限制元空间的大小：</p>
+<p>  <code>java -XX:MaxMetaspaceSize=10m MetaspaceOOM</code></p>
+<p>  当生成的类过多，导致元空间耗尽时，会抛出 <code>java.lang.OutOfMemoryError: Metaspace</code> 异常。</p>
+</li>
+</ul>
+<h3 id="4-运行时常量池溢出"><a href="#4-运行时常量池溢出" class="headerlink" title="4. 运行时常量池溢出"></a>4. 运行时常量池溢出</h3><p>在 <code>Java 7</code> 及以前，运行时常量池（<code>Runtime Constant Pool</code>）是在方法区（永久代）中的，而在 <code>Java 8</code> 及以后，它在堆中。下面的代码通过不断地向常量池中添加字符串来导致溢出。</p>
+<h4 id="示例代码：运行时常量池溢出"><a href="#示例代码：运行时常量池溢出" class="headerlink" title="示例代码：运行时常量池溢出"></a>示例代码：运行时常量池溢出</h4><pre><code class="hljs java"><span class="hljs-keyword">import</span> java.util.ArrayList;  
+<span class="hljs-keyword">import</span> java.util.List;  
+  
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RuntimeConstantPoolOOM</span> &#123;  
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;  
+        List&lt;String&gt; list = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();  
+        <span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;  
+        <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;  
+            list.add(String.valueOf(i++).intern());  
+        &#125;  
+    &#125;  
+&#125;</code></pre>
+
+<h4 id="说明：-1"><a href="#说明：-1" class="headerlink" title="说明："></a>说明：</h4><ul>
+<li><p>这个代码不断生成新的字符串，并调用 <code>intern()</code> 方法将其放入运行时常量池中。</p>
+</li>
+<li><p>如果使用 <code>Java 7</code>，可以通过以下 <code>JVM</code> 参数来限制永久代大小，从而触发 <code>java.lang.OutOfMemoryError: PermGen space</code> 异常：</p>
+<p>  <code>java -XX:PermSize=10m -XX:MaxPermSize=10m RuntimeConstantPoolOOM</code></p>
+</li>
+<li><p>在 <code>Java 8</code> 及以后，这个代码将会导致堆内存溢出，因为运行时常量池在堆内存中：<br>  <code>java -Xmx10m RuntimeConstantPoolOOM</code></p>
+<p>  当堆内存耗尽时，会抛出 <code>java.lang.OutOfMemoryError: Java heap space</code> 异常。</p>
+</li>
+</ul>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2022/08/03/jvm-%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B/" title="jvm-解析流程"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">上一页: jvm-解析流程</span></a><a class="button is-default" href="/2022/06/12/redis%E6%8C%81%E4%B9%85%E5%8C%96%E6%80%BB%E7%BB%93/" title="redis持久化总结"><span class="has-text-weight-semibold">下一页: redis持久化总结</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Zhangdd/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/wwinter117"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Zhangdd 2021 - 2024</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="site author" target="_blank" rel="noopener" href="//github.com/wwinter117">Hosted by Zhangdd&nbsp;</a></p><!--div(style="margin-top: 2px")--><!--  a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")--></div><div><span>浙备7837-534598</span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/jquery-3.6.1.min.js"></script><script src="/js/jquery-fancybox.min.js"></script><script src="/js/img_zoom.js"></script><script src="/js/post.js"></script></body></html>

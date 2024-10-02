@@ -1,0 +1,43 @@
+<!DOCTYPE html><html class="appearance-auto" lang="zh-CN"><head><meta charset="UTF-8"><title>基于riscv的小型操作系统</title><meta name="description" content="Let's go"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><link rel="stylesheet" href="/style/common/jquery.fancybox.min.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="
+&amp;#x67;&amp;#x69;&amp;#116;&amp;#64;&amp;#103;&amp;#x69;&amp;#116;&amp;#104;&amp;#117;&amp;#x62;&amp;#x2e;&amp;#99;&amp;#111;&amp;#x6d;:wwinter117&amp;#x2F;myrvos.git
+myrvos一个运行在risc-v指令集架构之上的小型操作系统
+环境依赖
+RISC-V工具链 (riscv64-unknown-elf-gcc, riscv64-unknown-elf-objcopy, riscv64-unknown-elf-objdump)
+QEMU系统模拟器 (qemu-system-riscv32)
+GDB多架构版本 (gdb-multiarch)
+
+确保这些工具已经安装并且在系统路径中。
+构建项目使用以下命令来构建整个项目：
+make all
+
+这将会编译所有源代.."><meta name="generator" content="Hexo 7.3.0"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Zhangdd's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">基于riscv的小型操作系统</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">点击返回顶部</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#myrvos"><span class="toc-text">myrvos</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E4%BE%9D%E8%B5%96"><span class="toc-text">环境依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E9%A1%B9%E7%9B%AE"><span class="toc-text">构建项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E9%A1%B9%E7%9B%AE"><span class="toc-text">运行项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E9%A1%B9%E7%9B%AE"><span class="toc-text">调试项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81"><span class="toc-text">查看汇编代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B8%85%E7%90%86%E9%A1%B9%E7%9B%AE"><span class="toc-text">清理项目</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/riscv"><i class="tag post-item-tag">riscv</i></a><a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F"><i class="tag post-item-tag">操作系统</i></a><a href="/tags/%E6%B1%87%E7%BC%96"><i class="tag post-item-tag">汇编</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">基于riscv的小型操作系统</h1><time class="has-text-grey" datetime="2023-04-02T14:46:49.000Z">2023-04-02</time><article class="mt-2 post-content"><p><img src="https://zincv.oss-cn-hangzhou.aliyuncs.com/images/riscv-7630a5e65eaa20a4f697de7b40bba24c.jpeg"></p>
+<p><a href="mailto:&#x67;&#x69;&#116;&#64;&#103;&#x69;&#116;&#104;&#117;&#x62;&#x2e;&#99;&#111;&#x6d;">&#x67;&#x69;&#116;&#64;&#103;&#x69;&#116;&#104;&#117;&#x62;&#x2e;&#99;&#111;&#x6d;</a>:wwinter117&#x2F;myrvos.git</p>
+<h1 id="myrvos"><a href="#myrvos" class="headerlink" title="myrvos"></a>myrvos</h1><p>一个运行在risc-v指令集架构之上的小型操作系统</p>
+<h2 id="环境依赖"><a href="#环境依赖" class="headerlink" title="环境依赖"></a>环境依赖</h2><ul>
+<li>RISC-V工具链 (<code>riscv64-unknown-elf-gcc</code>, <code>riscv64-unknown-elf-objcopy</code>, <code>riscv64-unknown-elf-objdump</code>)</li>
+<li>QEMU系统模拟器 (<code>qemu-system-riscv32</code>)</li>
+<li>GDB多架构版本 (<code>gdb-multiarch</code>)</li>
+</ul>
+<p>确保这些工具已经安装并且在系统路径中。</p>
+<h2 id="构建项目"><a href="#构建项目" class="headerlink" title="构建项目"></a>构建项目</h2><p>使用以下命令来构建整个项目：</p>
+<pre><code class="hljs shell">make all</code></pre>
+
+<p>这将会编译所有源代码，并将生成的文件放置在build目录下。</p>
+<h2 id="运行项目"><a href="#运行项目" class="headerlink" title="运行项目"></a>运行项目</h2><p>一旦构建完成，可以使用以下命令来通过QEMU运行操作系统：</p>
+<pre><code class="hljs shell">make run</code></pre>
+
+<p>这条命令将启动QEMU模拟器并加载操作系统。可以通过QEMU的控制台来与操作系统交互。</p>
+<h2 id="调试项目"><a href="#调试项目" class="headerlink" title="调试项目"></a>调试项目</h2><p>如果需要调试操作系统，可以使用以下命令：</p>
+<pre><code class="hljs shell">make debug</code></pre>
+
+<p>这会启动QEMU模拟器并等待GDB的连接。然后，可以使用GDB连接到QEMU，并开始调试。</p>
+<h2 id="查看汇编代码"><a href="#查看汇编代码" class="headerlink" title="查看汇编代码"></a>查看汇编代码</h2><p>如果想要查看操作系统的汇编代码，可以运行：</p>
+<pre><code class="hljs shell">make code</code></pre>
+
+<p>这会使用objdump工具来反汇编操作系统，并通过less命令分页显示。</p>
+<h2 id="清理项目"><a href="#清理项目" class="headerlink" title="清理项目"></a>清理项目</h2><p>要删除所有构建生成的文件，运行：</p>
+<pre><code class="hljs shell">make clean</code></pre>
+
+<p>这会删除build目录下所有的文件，清理项目环境。</p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2023/04/26/%E7%AE%80%E6%98%93%E8%8E%B7%E5%8F%96ext2%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BF%A1%E6%81%AF/" title="简易获取ext2文件系统的信息"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">上一页: 简易获取ext2文件系统的信息</span></a><a class="button is-default" href="/2022/12/26/%E5%9C%A8%20M1%20Pro%20%E8%8A%AF%E7%89%87%E4%B8%8A%E7%BC%96%E8%AF%91%20JDK%2017/" title="在 M1 Pro 芯片的 macOS 上编译 JDK 17"><span class="has-text-weight-semibold">下一页: 在 M1 Pro 芯片的 macOS 上编译 JDK 17</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Zhangdd/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/wwinter117"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Zhangdd 2021 - 2024</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="site author" target="_blank" rel="noopener" href="//github.com/wwinter117">Hosted by Zhangdd&nbsp;</a></p><!--div(style="margin-top: 2px")--><!--  a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")--></div><div><span>浙备7837-534598</span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/jquery-3.6.1.min.js"></script><script src="/js/jquery-fancybox.min.js"></script><script src="/js/img_zoom.js"></script><script src="/js/post.js"></script></body></html>

@@ -8,31 +8,18 @@
         "type": "tabs",
         "children": [
           {
-            "id": "d0e2d166c3beb6a4",
+            "id": "2b1788597bfa77db",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "hello-world.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "839d1cf9a4ccca31",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "file": "redis集群实验.md",
                 "mode": "source",
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -82,7 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 338.5024719238281
   },
   "right": {
     "id": "d1ace45bb60abbf2",
@@ -98,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "file": "redis集群实验.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md",
+                "file": "redis集群实验.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -138,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md"
+                "file": "redis集群实验.md"
               }
             }
           }
@@ -159,9 +146,39 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "839d1cf9a4ccca31",
+  "active": "2b1788597bfa77db",
   "lastOpenFiles": [
-    "hello-world.md",
-    "在 M1 Pro 芯片的 macOS 上编译 JDK 17.md"
+    "redis持久化总结.md",
+    "oom异常实例.md",
+    "jvm-spec-2. The Structure of the Java Virtual Machine.md",
+    "jvm-虚拟机性能监控、故障处理工具总结.md",
+    "jvm-类加载流程.md",
+    "jvm-解析流程.md",
+    "jvm-对象的内存布局.md",
+    "HotSpot字节码解释器片段.md",
+    "docker加速方法总结.md",
+    "自己实现一个简易的redis.md",
+    "在控制台打印树的结构.md",
+    "在 M1 Pro 芯片上编译 JDK 17.md",
+    "我的xv6操作系统的lab实验解法.md",
+    "使用docker快速搭建redids集群实验环境.md",
+    "简易获取ext2文件系统的信息.md",
+    "基于riscv的小型操作系统.md",
+    "images/xv6-Pasted image 20241002142130.png",
+    "images/oom-Pasted image 20240909195755.png",
+    "images/tree-3dd1430368563ef0e4be474e822478d0.jpeg",
+    "redis集群实验.md",
+    "images/jvm-3af4ecb7bbe2376bffb9225160a6a0dd.jpg",
+    "images/5fb76d3ec9fd434fe46a579d9c1c8a83.jpeg",
+    "images/riscv-7630a5e65eaa20a4f697de7b40bba24c.jpeg",
+    "images/redis-5fb76d3ec9fd434fe46a579d9c1c8a83.jpeg",
+    "images/m1-pro-72d455dd20ed2ed2273a1cf5544d154c.jpeg",
+    "images/docker-12bb9bcf3a20e5eb0255e561a8bacba6.jpeg",
+    "images/disk-90a6ee76793cbbf60477e2bf74b58680.jpg",
+    "images",
+    "jvm-spec-1. Introduction.md",
+    "jvm-spec-3. Compiling for the Java Virtual Machine.md",
+    "jvm-spec-5. Loading, Linking, and Initializing.md",
+    "jvm-spec-8. Threads and Locks【Second Edition Spec】.md"
   ]
 }

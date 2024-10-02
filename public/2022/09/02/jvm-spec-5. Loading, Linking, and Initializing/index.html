@@ -1,0 +1,1137 @@
+<!DOCTYPE html><html class="appearance-auto" lang="zh-CN"><head><meta charset="UTF-8"><title>jvm-spec-5. Loading, Linking, and Initializing</title><meta name="description" content="Let's go"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><link rel="stylesheet" href="/style/common/jquery.fancybox.min.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="The Java Virtual Machine dynamically loads, links, and initializes classes and interfaces. Loading is the process of finding the binary representation of a class or interface type with a particular name and creating a class or interface from that binary representation. Linking is the process of taking a class or interface and combining it into the run-time.."><meta name="generator" content="Hexo 7.3.0"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Zhangdd's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">jvm-spec-5. Loading, Linking, and Initializing</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">点击返回顶部</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#5-1-The-Run-Time-Constant-Pool"><span class="toc-text">5.1 The Run-Time Constant Pool</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-2-Java-Virtual-Machine-Startup"><span class="toc-text">5.2 Java Virtual Machine Startup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-3-Creation-and-Loading"><span class="toc-text">5.3 Creation and Loading</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-1-Loading-Using-the-Bootstrap-Class-Loader"><span class="toc-text">5.3.1 Loading Using the Bootstrap Class Loader</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-2-Loading-Using-a-User-defined-Class-Loader"><span class="toc-text">5.3.2 Loading Using a User-defined Class Loader</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-3-Creating-Array-Classes"><span class="toc-text">5.3.3 Creating Array Classes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-4-Loading-Constraints"><span class="toc-text">5.3.4 Loading Constraints</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-5-Deriving-a-Class-from-a-class-File-Representation"><span class="toc-text">5.3.5 Deriving a Class from a class File Representation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-4-Linking"><span class="toc-text">5.4 Linking</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-1-Verification"><span class="toc-text">5.4.1 Verification</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-2-Preparation"><span class="toc-text">5.4.2 Preparation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-3-Resolution"><span class="toc-text">5.4.3 Resolution</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-1-Class-and-Interface-Resolution"><span class="toc-text">5.4.3.1 Class and Interface Resolution</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-2-Field-Resolution"><span class="toc-text">5.4.3.2 Field Resolution</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-3-Method-Resolution"><span class="toc-text">5.4.3.3 Method Resolution</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-4-Interface-Method-Resolution"><span class="toc-text">5.4.3.4 Interface Method Resolution</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-5-Method-Type-and-Method-Handle-Resolution"><span class="toc-text">5.4.3.5 Method Type and Method Handle Resolution</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-3-6-Call-Site-Specifier-Resolution"><span class="toc-text">5.4.3.6 Call Site Specifier Resolution</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-4-Access-Control"><span class="toc-text">5.4.4 Access Control</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-5-Overriding"><span class="toc-text">5.4.5 Overriding</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-5-Initialization"><span class="toc-text">5.5 Initialization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-6-Binding-Native-Method-Implementations"><span class="toc-text">5.6 Binding Native Method Implementations</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-7-Java-Virtual-Machine-Exit"><span class="toc-text">5.7 Java Virtual Machine Exit</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3%E7%BF%BB%E8%AF%91"><i class="tag post-item-tag">官方文档翻译</i></a><a href="/tags/jvm"><i class="tag post-item-tag">jvm</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">jvm-spec-5. Loading, Linking, and Initializing</h1><time class="has-text-grey" datetime="2022-09-02T14:46:49.000Z">2022-09-02</time><article class="mt-2 post-content"><p>The Java Virtual Machine dynamically loads, links, and initializes classes and interfaces. Loading is the process of finding the binary representation of a class or interface type with a particular name and creating a class or interface from that binary representation. Linking is the process of taking a class or interface and combining it into the run-time state of the Java Virtual Machine so that it can be executed. Initialization of a class or interface consists of executing the class or interface initialization method <code>&lt;clinit&gt;</code> (§2.9).</p>
+<p>Java虚拟机动态地加载、链接和初始化类和接口。加载是找到具有特定名称的类或接口类型的二进制表示并从该二进制表示中创建一个类或接口的过程。链接是将类或接口整合到Java虚拟机的运行时状态中，以便能够执行。类或接口的初始化包括执行类或接口的初始化方法<code>&lt;clinit&gt;</code> (§2.9)。</p>
+<p>In this chapter, §5.1 describes how the Java Virtual Machine derives symbolic references from the binary representation of a class or interface. §5.2 explains how the processes of loading, linking, and initialization are first initiated by the Java Virtual Machine. §5.3 specifies how binary representations of classes and interfaces are loaded by class loaders and how classes and interfaces are created. Linking is described in §5.4. §5.5 details how classes and interfaces are initialized. §5.6 introduces the notion of binding native methods. Finally, §5.7 describes when a Java Virtual Machine exits.</p>
+<p>在本章中，§5.1描述了Java虚拟机如何从类或接口的二进制表示中派生符号引用。§5.2解释了Java虚拟机如何首先启动加载、链接和初始化的过程。§5.3规定了类加载器如何加载类和接口的二进制表示，以及如何创建类和接口。链接在§5.4中描述。§5.5详细说明了类和接口的初始化。§5.6介绍了绑定本地方法的概念。最后，§5.7描述了Java虚拟机何时退出。</p>
+<hr>
+<h2 id="5-1-The-Run-Time-Constant-Pool"><a href="#5-1-The-Run-Time-Constant-Pool" class="headerlink" title="5.1 The Run-Time Constant Pool"></a>5.1 The Run-Time Constant Pool</h2><p>The Java Virtual Machine maintains a per-type constant pool (§2.5.5), a run-time data structure that serves many of the purposes of the symbol table of a conventional programming language implementation.</p>
+<p>Java虚拟机维护一个按类型划分的常量池 (§2.5.5)，它是一个运行时数据结构，起到了传统编程语言实现中符号表的许多功能。</p>
+<p>The <code>constant_pool</code> table (§4.4) in the binary representation of a class or interface is used to construct the run-time constant pool upon class or interface creation (§5.3). All references in the run-time constant pool are initially symbolic.</p>
+<p>在类或接口的创建过程中 (§5.3)，二进制表示中的<code>constant_pool</code>表 (§4.4) 被用来构建运行时常量池。运行时常量池中的所有引用最初都是符号引用。</p>
+<p>The symbolic references in the run-time constant pool are derived from structures in the binary representation of the class or interface as follows:</p>
+<p>运行时常量池中的符号引用是从类或接口的二进制表示中的结构派生的，具体如下：</p>
+<ul>
+<li><p>A symbolic reference to a class or interface is derived from a <code>CONSTANT_Class_info</code> structure (§4.4.1) in the binary representation of a class or interface. Such a reference gives the name of the class or interface in the form returned by the <code>Class.getName</code> method, that is:</p>
+<ul>
+<li>For a non-array class or an interface, the name is the binary name (§4.2.1) of the class or interface.</li>
+<li>For an array class of n dimensions, the name begins with n occurrences of the ASCII “[“ character followed by a representation of the element type:<ul>
+<li>If the element type is a primitive type, it is represented by the corresponding field descriptor (§4.3.2).</li>
+<li>Otherwise, if the element type is a reference type, it is represented by the ASCII “L” character followed by the binary name (§4.2.1) of the element type followed by the ASCII “;” character.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>类或接口的符号引用是从类或接口二进制表示中的<code>CONSTANT_Class_info</code>结构 (§4.4.1) 派生的。此类引用提供了通过<code>Class.getName</code>方法返回的类或接口的名称，即：</p>
+<ul>
+<li>对于非数组类或接口，其名称是类或接口的二进制名称 (§4.2.1)。</li>
+<li>对于n维数组类，其名称以n个ASCII\“[”字符开头，后跟元素类型的表示：<ul>
+<li>如果元素类型是基本类型，则使用相应的字段描述符 (§4.3.2) 表示。</li>
+<li>否则，如果元素类型是引用类型，则使用ASCII“L”字符，后跟元素类型的二进制名称 (§4.2.1)，再后跟ASCII“;”字符。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Whenever this chapter refers to the name of a class or interface, it should be understood to be in the form returned by the <code>Class.getName</code> method.</p>
+<p>本章中提到类或接口的名称时，应理解为以<code>Class.getName</code>方法返回的形式。</p>
+<ul>
+<li><p>A symbolic reference to a field of a class or an interface is derived from a <code>CONSTANT_Fieldref_info</code> structure (§4.4.2) in the binary representation of a class or interface. Such a reference gives the name and descriptor of the field, as well as a symbolic reference to the class or interface in which the field is to be found.</p>
+</li>
+<li><p>类或接口字段的符号引用是从类或接口二进制表示中的<code>CONSTANT_Fieldref_info</code>结构 (§4.4.2) 派生的。此类引用提供字段的名称和描述符，以及包含该字段的类或接口的符号引用。</p>
+</li>
+<li><p>A symbolic reference to a method of a class is derived from a <code>CONSTANT_Methodref_info</code> structure (§4.4.2) in the binary representation of a class or interface. Such a reference gives the name and descriptor of the method, as well as a symbolic reference to the class in which the method is to be found.</p>
+</li>
+<li><p>类方法的符号引用是从类或接口二进制表示中的<code>CONSTANT_Methodref_info</code>结构 (§4.4.2) 派生的。此类引用提供方法的名称和描述符，以及包含该方法的类的符号引用。</p>
+</li>
+<li><p>A symbolic reference to a method of an interface is derived from a <code>CONSTANT_InterfaceMethodref_info</code> structure (§4.4.2) in the binary representation of a class or interface. Such a reference gives the name and descriptor of the interface method, as well as a symbolic reference to the interface in which the method is to be found.</p>
+</li>
+<li><p>接口方法的符号引用是从类或接口二进制表示中的<code>CONSTANT_InterfaceMethodref_info</code>结构 (§4.4.2) 派生的。此类引用提供接口方法的名称和描述符，以及包含该方法的接口的符号引用。</p>
+</li>
+<li><p>A symbolic reference to a method handle is derived from a <code>CONSTANT_MethodHandle_info</code> structure (§4.4.8) in the binary representation of a class or interface. Such a reference gives a symbolic reference to a field of a class or interface, or a method of a class, or a method of an interface, depending on the kind of the method handle.</p>
+</li>
+<li><p>方法句柄的符号引用是从类或接口二进制表示中的<code>CONSTANT_MethodHandle_info</code>结构 (§4.4.8) 派生的。此类引用提供对类或接口的字段、类的方法或接口的方法的符号引用，具体取决于方法句柄的类型。</p>
+</li>
+<li><p>A symbolic reference to a method type is derived from a <code>CONSTANT_MethodType_info</code> structure (§4.4.9) in the binary representation of a class or interface. Such a reference gives a method descriptor (§4.3.3).</p>
+</li>
+<li><p>方法类型的符号引用是从类或接口二进制表示中的<code>CONSTANT_MethodType_info</code>结构 (§4.4.9) 派生的。此类引用提供方法描述符 (§4.3.3)。</p>
+</li>
+<li><p>A symbolic reference to a call site specifier is derived from a <code>CONSTANT_InvokeDynamic_info</code> structure (§4.4.10) in the binary representation of a class or interface. Such a reference gives:</p>
+<ul>
+<li>a symbolic reference to a method handle, which will serve as a bootstrap method for an <code>invokedynamic</code> instruction (§invokedynamic);</li>
+<li>a sequence of symbolic references (to classes, method types, and method handles), string literals, and run-time constant values which will serve as static arguments to a bootstrap method;</li>
+<li>a method name and method descriptor.</li>
+</ul>
+</li>
+<li><p>调用站点说明符的符号引用是从类或接口二进制表示中的<code>CONSTANT_InvokeDynamic_info</code>结构 (§4.4.10) 派生的。此类引用提供：</p>
+<ul>
+<li>一个方法句柄的符号引用，该句柄将用作<code>invokedynamic</code>指令 (§invokedynamic) 的引导方法；</li>
+<li>一系列符号引用（类、方法类型和方法句柄的符号引用）、字符串字面量和运行时常量值，这些将作为引导方法的静态参数；</li>
+<li>方法名称和方法描述符。</li>
+</ul>
+</li>
+</ul>
+<p>In addition, certain run-time values which are not symbolic references are derived from items found in the <code>constant_pool</code> table:</p>
+<p>此外，某些不是符号引用的运行时值是从<code>constant_pool</code>表中的项派生的：</p>
+<ul>
+<li><p>A string literal is a reference to an instance of class <code>String</code>, and is derived from a <code>CONSTANT_String_info</code> structure (§4.4.3) in the binary representation of a class or interface. The <code>CONSTANT_String_info</code> structure gives the sequence of Unicode code points constituting the string literal.</p>
+</li>
+<li><p>字符串字面量是对<code>String</code>类实例的引用，并且是从类或接口的二进制表示中的<code>CONSTANT_String_info</code>结构 (§4.4.3) 派生的。<code>CONSTANT_String_info</code>结构给出了组成字符串字面量的Unicode代码点序列。</p>
+</li>
+</ul>
+<p>The Java programming language requires that identical string literals (that is, literals that contain the same sequence of code points) must refer to the same instance of class <code>String</code> (JLS §3.10.5). In addition, if the method <code>String.intern</code> is called on any string, the result is a reference to the same class instance that would be returned if that string appeared as a literal. Thus, the following expression must have the value true:<br><code>(&quot;a&quot; + &quot;b&quot; + &quot;c&quot;).intern() == &quot;abc&quot;</code></p>
+<p>Java编程语言要求相同的字符串字面量（即包含相同代码点序列的字面量）必须引用<code>String</code>类的同一实例 (JLS §3.10.5)。此外，如果对任何字符串调用<code>String.intern</code>方法，结果将是对同一类实例的引用，如果该字符串作为字面量出现则会返回该实例。因此，以下表达式的值必须为true：<br><code>(&quot;a&quot; + &quot;b&quot; + &quot;c&quot;).intern() == &quot;abc&quot;</code></p>
+<p>To derive a string literal, the Java Virtual Machine examines the sequence of code points given by the <code>CONSTANT_String_info</code> structure.</p>
+<p>要派生字符串字面量，Java虚拟机会检查<code>CONSTANT_String_info</code>结构给出的代码点序列。</p>
+<ul>
+<li><p>If the method <code>String.intern</code> has previously been called on an instance of class <code>String</code> containing a sequence of Unicode code points identical to that given by the <code>CONSTANT_String_info</code> structure, then the result of string literal derivation is a reference to that same instance of class <code>String</code>.</p>
+</li>
+<li><p>如果<code>String</code>类实例上之前已调用过<code>String.intern</code>方法，并且该实例包含的Unicode代码点序列与<code>CONSTANT_String_info</code>结构给出的一致，则字符串字面量派生的结果是对该<code>String</code>类同一实例的引用。</p>
+</li>
+<li><p>Otherwise, a new instance of class <code>String</code> is created containing the sequence of Unicode code points given by the <code>CONSTANT_String_info</code> structure; a reference to that class instance is the result of string literal derivation. Finally, the <code>intern</code> method of the new <code>String</code> instance is invoked.</p>
+</li>
+<li><p>否则，将创建一个包含<code>CONSTANT_String_info</code>结构给出的Unicode代码点序列的<code>String</code>类新实例；对该类实例的引用是字符串字面量派生的结果。最后，调用新<code>String</code>实例的<code>intern</code>方法。</p>
+</li>
+</ul>
+<hr>
+<h2 id="5-2-Java-Virtual-Machine-Startup"><a href="#5-2-Java-Virtual-Machine-Startup" class="headerlink" title="5.2 Java Virtual Machine Startup"></a>5.2 Java Virtual Machine Startup</h2><p>The Java Virtual Machine starts up by creating an initial class, which is specified in an implementation-dependent manner, using the bootstrap class loader (§5.3.1). The Java Virtual Machine then links the initial class, initializes it, and invokes the public class method <code>void main(String[])</code>. The invocation of this method drives all further execution. Execution of the Java Virtual Machine instructions constituting the main method may cause linking (and consequently creation) of additional classes and interfaces, as well as invocation of additional methods.</p>
+<p>Java虚拟机启动时，使用引导类加载器 (§5.3.1) 创建初始类，该初始类以实现依赖的方式指定。Java虚拟机随后链接初始类，初始化它，并调用公共类方法<code>void main(String[])</code>。此方法的调用驱动了所有进一步的执行。构成main方法的Java虚拟机指令的执行可能会导致其他类和接口的链接（从而创建），以及其他方法的调用。</p>
+<p>In an implementation of the Java Virtual Machine, the initial class could be provided as a command line argument. Alternatively, the implementation could provide an initial class that sets up a class loader which in turn loads an application. Other choices of the initial class are possible so long as they are consistent with the specification given in the previous paragraph.</p>
+<p>在Java虚拟机的实现中，初始类可以作为命令行参数提供。或者，实现可以提供一个初始类，该类设置一个类加载器，该加载器反过来加载应用程序。只要与前一段中给出的规范一致，初始类的其他选择也是可能的。</p>
+<hr>
+<h2 id="5-3-Creation-and-Loading"><a href="#5-3-Creation-and-Loading" class="headerlink" title="5.3 Creation and Loading"></a>5.3 Creation and Loading</h2><p>Creation of a class or interface C denoted by the name N consists of the construction in the method area of the Java Virtual Machine (§2.5.4) of an implementation-specific internal representation of C. Class or interface creation is triggered by another class or interface D, which references C through its run-time constant pool.</p>
+<p>表示为名称N的类或接口C的创建包括在Java虚拟机 (§2.5.4) 的方法区中构建C的实现特定的内部表示。类或接口的创建是由另一个类或接口D触发的，D通过其运行时常量池引用C。</p>
+<p>Class or interface creation may also be triggered by D invoking methods in certain Java SE platform class libraries (§2.12) such as reflection.</p>
+<p>类或接口的创建还可能由D在某些Java SE平台类库中调用方法（例如反射）触发。</p>
+<p>If C is not an array class, it is created by loading a binary representation of C (§4 (The class File Format)) using a class loader. Array classes do not have an external binary representation; they are created by the Java Virtual Machine rather than by a class loader.</p>
+<p>如果C不是数组类，则通过使用类加载器加载C的二进制表示 (§4 (类文件格式)) 创建它。数组类没有外部二进制表示；它们是由Java虚拟机创建的，而不是由类加载器创建的。</p>
+<p>There are two kinds of class loaders: the bootstrap class loader supplied by the Java Virtual Machine, and user-defined class loaders. Every user-defined class loader is an instance of a subclass of the abstract class <code>ClassLoader</code>. Applications employ user-defined class loaders in order to extend the manner in which the Java Virtual Machine dynamically loads and thereby creates classes. User-defined class loaders can be used to create classes that originate from user-defined sources. For example, a class could be downloaded across a network, generated on the fly, or extracted from an encrypted file.</p>
+<p>有两种类加载器：Java虚拟机提供的引导类加载器和用户定义的类加载器。每个用户定义的类加载器都是抽象类<code>ClassLoader</code>子类的实例。应用程序使用用户定义的类加载器来扩展Java虚拟机动态加载并从而创建类的方式。用户定义的类加载器可用于创建源自用户定义源的类。例如，一个类可以通过网络下载，动态生成，或从加密文件中提取。</p>
+<p>A class loader L may create C by defining it directly or by delegating to another class loader. If L creates C directly, we say that L defines C or, equivalently, that L is the defining loader of C.</p>
+<p>类加载器L可以通过直接定义C或委托给另一个类加载器来创建C。如果L直接创建C，我们称L定义了C，或等同于说L是C的定义加载器。</p>
+<p>When one class loader delegates to another class loader, the loader that initiates the loading is not necessarily the same loader that completes the loading and defines the class. If L creates C, either by defining it directly or by delegation, we say that L initiates loading of C or, equivalently, that L is an initiating loader of C.</p>
+<p>当一个类加载器委托给另一个类加载器时，发起加载的加载器不一定是完成加载并定义类的加载器。如果L创建C，无论是直接定义还是通过委托，我们称L发起了C的加载，或等同于说L是C的发起加载器。</p>
+<p>At run time, a class or interface is determined not by its name alone, but by a pair: its binary name (§4.2.1) and its defining class loader. Each such class or interface belongs to a single run-time package. The run-time package of a class or interface is determined by the package name and defining class loader of the class or interface.</p>
+<p>在运行时，类或接口不仅由其名称确定，还由一对：其二进制名称 (§4.2.1) 和定义类加载器。每个此类类或接口都属于单一的运行时包。类或接口的运行时包由类或接口的包名称和定义类加载器确定。</p>
+<p>The Java Virtual Machine uses one of three procedures to create class or interface C denoted by N:</p>
+<p>Java虚拟机使用以下三种程序之一来创建表示为N的类或接口C：</p>
+<ul>
+<li><p>If N denotes a non-array class or an interface, one of the two following methods is used to load and thereby create C:</p>
+<ul>
+<li>If D was defined by the bootstrap class loader, then the bootstrap class loader initiates loading of C (§5.3.1).</li>
+<li>If D was defined by a user-defined class loader, then that same user-defined class loader initiates loading of C (§5.3.2).</li>
+</ul>
+</li>
+<li><p>如果N表示非数组类或接口，则使用以下两种方法之一来加载并从而创建C：</p>
+<ul>
+<li>如果D是由引导类加载器定义的，则由引导类加载器发起C的加载 (§5.3.1)。</li>
+<li>如果D是由用户定义的类加载器定义的，则由同一个用户定义的类加载器发起C的加载 (§5.3.2)。</li>
+</ul>
+</li>
+<li><p>Otherwise N denotes an array class. An array class is created directly by the Java Virtual Machine (§5.3.3), not by a class loader. However, the defining class loader of D is used in the process of creating array class C.</p>
+</li>
+<li><p>否则N表示数组类。数组类直接由Java虚拟机创建 (§5.3.3)，而不是由类加载器创建。但是，在创建数组类C的过程中使用了D的定义类加载器。</p>
+</li>
+</ul>
+<p>If an error occurs during class loading, then an instance of a subclass of <code>LinkageError</code> must be thrown at a point in the program that (directly or indirectly) uses the class or interface being loaded.</p>
+<p>如果在类加载过程中发生错误，则必须在程序中使用（直接或间接）正在加载的类或接口的地方抛出<code>LinkageError</code>子类的实例。</p>
+<p>If the Java Virtual Machine ever attempts to load a class C during verification (§5.4.1) or resolution (§5.4.3) (but not initialization (§5.5)), and the class loader that is used to initiate loading of C throws an instance of <code>ClassNotFoundException</code>, then the Java Virtual Machine must throw an instance of <code>NoClassDefFoundError</code> whose cause is the instance of <code>ClassNotFoundException</code>.</p>
+<p>如果Java虚拟机在验证 (§5.4.1) 或解析 (§5.4.3) （但不是初始化 (§5.5)）过程中尝试加载类C，并且用于发起C加载的类加载器抛出<code>ClassNotFoundException</code>的实例，则Java虚拟机必须抛出<code>NoClassDefFoundError</code>实例，其原因是<code>ClassNotFoundException</code>实例。</p>
+<p>(A subtlety here is that recursive class loading to load superclasses is performed as part of resolution (§5.3.5, step 3). Therefore, a <code>ClassNotFoundException</code> that results from a class loader failing to load a superclass must be wrapped in a <code>NoClassDefFoundError</code>.)</p>
+<p>（这里的一个微妙之处在于，加载超类的递归类加载作为解析 (§5.3.5, 第3步) 的一部分进行。因此，由类加载器无法加载超类而导致的<code>ClassNotFoundException</code>必须包装在<code>NoClassDefFoundError</code>中。）</p>
+<p>A well-behaved class loader should maintain three properties:</p>
+<p>一个表现良好的类加载器应该保持三个属性：</p>
+<ul>
+<li><p>Given the same name, a good class loader should always return the same <code>Class</code> object.</p>
+</li>
+<li><p>对于相同的名称，一个好的类加载器应始终返回相同的<code>Class</code>对象。</p>
+</li>
+<li><p>If a class loader L delegates loading of a class C to another loader L’, then for any type T that occurs as the direct superclass or a direct superinterface of C, or as the type of a field in C, or as the type of a formal parameter of a method or constructor in C, or as a return type of a method in C, L and L’ should return the same <code>Class</code> object.</p>
+</li>
+<li><p>如果类加载器L将类C的加载委托给另一个加载器L’，那么对于作为C的直接超类或直接超接口出现的任何类型T，或作为C中的字段类型，或作为C中方法或构造函数的形式参数类型，或作为C中方法的返回类型，L和L’应返回相同的<code>Class</code>对象。</p>
+</li>
+<li><p>If a user-defined classloader prefetches binary representations of classes and interfaces, or loads a group of related classes together, then it must reflect loading errors only at points in the program where they could have arisen without prefetching or group loading.</p>
+</li>
+<li><p>如果用户定义的类加载器预先获取类和接口的二进制表示，或一起加载一组相关类，则它必须仅在程序中可能发生错误的点上反映加载错误，而不会因预先获取或组加载而产生错误。</p>
+</li>
+</ul>
+<p>We will sometimes represent a class or interface using the notation <code>&lt;N, L&gt;</code>, where N denotes the name of the class or interface and L denotes the defining loader of the class or interface.</p>
+<p>我们有时会使用符号 <code>&lt;N, L&gt;</code> 来表示一个类或接口，其中N表示类或接口的名称，L表示类或接口的定义加载器。</p>
+<p>We will also represent a class or interface using the notation <code>N^Li</code>, where N denotes the name of the class or interface and Li denotes an initiating loader of the class or interface.</p>
+<p>我们还将使用符号 <code>N^Li</code> 来表示一个类或接口，其中N表示类或接口的名称，Li表示类或接口的发起加载器。</p>
+<hr>
+<h3 id="5-3-1-Loading-Using-the-Bootstrap-Class-Loader"><a href="#5-3-1-Loading-Using-the-Bootstrap-Class-Loader" class="headerlink" title="5.3.1 Loading Using the Bootstrap Class Loader"></a>5.3.1 Loading Using the Bootstrap Class Loader</h3><p>The following steps are used to load and thereby create the non-array class or interface C denoted by N using the bootstrap class loader.</p>
+<p>使用引导类加载器加载并从而创建非数组类或接口C的步骤如下：</p>
+<ol>
+<li><p>First, the Java Virtual Machine determines whether the bootstrap class loader has already been recorded as an initiating loader of a class or interface denoted by N. If so, this class or interface is C, and no class creation is necessary.</p>
+</li>
+<li><p>首先，Java虚拟机确定引导类加载器是否已被记录为由N表示的类或接口的发起加载器。如果是这样，这个类或接口就是C，不需要创建类。</p>
+</li>
+<li><p>Otherwise, the Java Virtual Machine passes the argument N to an invocation of a method on the bootstrap class loader to search for a purported representation of C in a platform-dependent manner. Typically, a class or interface will be represented using a file in a hierarchical file system, and the name of the class or interface will be encoded in the pathname of the file.</p>
+</li>
+<li><p>否则，Java虚拟机会将参数N传递给引导类加载器上的方法调用，以平台依赖的方式搜索C的假定表示。通常，类或接口将使用分层文件系统中的文件表示，并且类或接口的名称将编码在文件的路径名中。</p>
+</li>
+<li><p>Note that there is no guarantee that a purported representation found is valid or is a representation of C. This phase of loading must detect the following error:</p>
+<ul>
+<li>If no purported representation of C is found, loading throws an instance of <code>ClassNotFoundException</code>.</li>
+</ul>
+</li>
+<li><p>请注意，找到的假定表示是否有效或是否为C的表示没有保证。加载的这个阶段必须检测以下错误：</p>
+<ul>
+<li>如果未找到C的假定表示，加载会抛出<code>ClassNotFoundException</code>实例。</li>
+</ul>
+</li>
+<li><p>Then the Java Virtual Machine attempts to derive a class denoted by N using the bootstrap class loader from the purported representation using the algorithm found in §5.3.5. That class is C.</p>
+</li>
+<li><p>然后，Java虚拟机会尝试使用引导类加载器通过§5.3.5中找到的算法从假定表示中派生一个由N表示的类。那个类就是C。</p>
+</li>
+</ol>
+<hr>
+<h3 id="5-3-2-Loading-Using-a-User-defined-Class-Loader"><a href="#5-3-2-Loading-Using-a-User-defined-Class-Loader" class="headerlink" title="5.3.2 Loading Using a User-defined Class Loader"></a>5.3.2 Loading Using a User-defined Class Loader</h3><p>The following steps are used to load and thereby create the non-array class or interface C denoted by N using a user-defined class loader L.</p>
+<p>使用用户定义的类加载器L加载并从而创建由N表示的非数组类或接口C的步骤如下：</p>
+<ol>
+<li><p>First, the Java Virtual Machine determines whether L has already been recorded as an initiating loader of a class or interface denoted by N. If so, this class or interface is C, and no class creation is necessary.</p>
+</li>
+<li><p>首先，Java虚拟机确定L是否已被记录为由N表示的类或接口的发起加载器。如果是这样，这个类或接口就是C，不需要创建类。</p>
+</li>
+<li><p>Otherwise, the Java Virtual Machine invokes <code>loadClass(N)</code> on L. The value returned by the invocation is the created class or interface C. The Java Virtual Machine then records that L is an initiating loader of C (§5.3.4). The remainder of this section describes this process in more detail.</p>
+</li>
+<li><p>否则，Java虚拟机在L上调用<code>loadClass(N)</code>。调用返回的值是创建的类或接口C。然后，Java虚拟机记录L是C的发起加载器 (§5.3.4)。本节的其余部分更详细地描述了这个过程。</p>
+</li>
+<li><p>When the <code>loadClass</code> method of the class loader L is invoked with the name N of a class or interface C to be loaded, L must perform one of the following two operations in order to load C:</p>
+<ol>
+<li>The class loader L can create an array of bytes representing C as the bytes of a <code>ClassFile</code> structure (§4.1); it then must invoke the method <code>defineClass</code> of class <code>ClassLoader</code>. Invoking <code>defineClass</code> causes the Java Virtual Machine to derive a class or interface denoted by N using L from the array of bytes using the algorithm found in §5.3.5.</li>
+<li>The class loader L can delegate the loading of C to some other class loader L’. This is accomplished by passing the argument N directly or indirectly to an invocation of a method on L’ (typically the <code>loadClass</code> method). The result of the invocation is C.</li>
+</ol>
+</li>
+<li><p>当类加载器L的<code>loadClass</code>方法被调用并指定要加载的类或接口C的名称N时，L必须执行以下两项操作之一以加载C：</p>
+<ol>
+<li>类加载器L可以创建表示C的字节数组作为<code>ClassFile</code>结构 (§4.1) 的字节；然后必须调用<code>ClassLoader</code>类的<code>defineClass</code>方法。调用<code>defineClass</code>会导致Java虚拟机使用L从字节数组中使用§5.3.5中找到的算法派生一个由N表示的类或接口。</li>
+<li>类加载器L可以将C的加载委托给其他类加载器L’。这是通过将参数N直接或间接传递给L’上的方法调用（通常是<code>loadClass</code>方法）来完成的。调用的结果是C。</li>
+</ol>
+</li>
+<li><p>In either (1) or (2), if the class loader L is unable to load a class or interface denoted by N for any reason, it must throw an instance of <code>ClassNotFoundException</code>.</p>
+</li>
+<li><p>在(1)或(2)中，如果类加载器L因任何原因无法加载由N表示的类或接口，则必须抛出<code>ClassNotFoundException</code>实例。</p>
+</li>
+</ol>
+<p>Since JDK release 1.1, Oracle’s Java Virtual Machine implementation has invoked the <code>loadClass</code> method of a class loader in order to cause it to load a class or interface. The argument to <code>loadClass</code> is the name of the class or interface to be loaded. There is also a two-argument version of the <code>loadClass</code> method, where the second argument is a boolean that indicates whether the class or interface is to be linked or not. Only the two-argument version was supplied in JDK release 1.0.2, and Oracle’s Java Virtual Machine implementation relied on it to link the loaded class or interface. From JDK release 1.1 onward, Oracle’s Java Virtual Machine implementation links the class or interface directly, without relying on the class loader.</p>
+<p>自JDK 1.1版本以来，Oracle的Java虚拟机实现已经调用类加载器的<code>loadClass</code>方法来促使它加载类或接口。<code>loadClass</code>的参数是要加载的类或接口的名称。还有一个带两个参数的<code>loadClass</code>方法版本，其中第二个参数是一个布尔值，指示类或接口是否要链接。JDK 1.0.2版本中只提供了带两个参数的版本，Oracle的Java虚拟机实现依赖它来链接加载的类或接口。从JDK 1.1版本开始，Oracle的Java虚拟机实现直接链接类或接口，而不依赖类加载器。</p>
+<h3 id="5-3-3-Creating-Array-Classes"><a href="#5-3-3-Creating-Array-Classes" class="headerlink" title="5.3.3 Creating Array Classes"></a>5.3.3 Creating Array Classes</h3><p>The following steps are used to create the array class C denoted by N using class loader L. Class loader L may be either the bootstrap class loader or a user-defined class loader.</p>
+<p>使用类加载器L创建由N表示的数组类C的步骤如下。类加载器L可以是引导类加载器或用户定义的类加载器。</p>
+<ol>
+<li><p>If L has already been recorded as an initiating loader of an array class with the same component type as N, that class is C, and no array class creation is necessary.</p>
+</li>
+<li><p>如果L已被记录为与N具有相同组件类型的数组类的发起加载器，则该类就是C，不需要创建数组类。</p>
+</li>
+<li><p>Otherwise, the following steps are performed to create C:</p>
+<ol>
+<li>If the component type is a reference type, the algorithm of this section (§5.3) is applied recursively using class loader L in order to load and thereby create the component type of C.</li>
+<li>The Java Virtual Machine creates a new array class with the indicated component type and number of dimensions.</li>
+</ol>
+</li>
+<li><p>否则，执行以下步骤以创建C：</p>
+<ol>
+<li>如果组件类型是引用类型，则使用类加载器L递归应用本节 (§5.3) 的算法以加载并从而创建C的组件类型。</li>
+<li>Java虚拟机创建具有指定组件类型和维数的新数组类。</li>
+</ol>
+</li>
+<li><p>If the component type is a reference type, C is marked as having been defined by the defining class loader of the component type. Otherwise, C is marked as having been defined by the bootstrap class loader.</p>
+</li>
+<li><p>如果组件类型是引用类型，则C标记为由组件类型的定义类加载器定义。否则，C标记为由引导类加载器定义。</p>
+</li>
+<li><p>In any case, the Java Virtual Machine then records that L is an initiating loader for C (§5.3.4).</p>
+</li>
+<li><p>无论如何，Java虚拟机随后记录L是C的发起加载器 (§5.3.4)。</p>
+</li>
+<li><p>If the component type is a reference type, the accessibility of the array class is determined by the accessibility of its component type. Otherwise, the accessibility of the array class is public.</p>
+</li>
+<li><p>如果组件类型是引用类型，数组类的可访问性由其组件类型的可访问性决定。否则，数组类的可访问性为公共。</p>
+</li>
+</ol>
+<hr>
+<h3 id="5-3-4-Loading-Constraints"><a href="#5-3-4-Loading-Constraints" class="headerlink" title="5.3.4 Loading Constraints"></a>5.3.4 Loading Constraints</h3><p>Ensuring type-safe linkage in the presence of class loaders requires special care. It is possible that when two different class loaders initiate loading of a class or interface denoted by N, the name N may denote a different class or interface in each loader.</p>
+<p>在类加载器存在的情况下确保类型安全的链接需要特别小心。当两个不同的类加载器发起由N表示的类或接口的加载时，N可能在每个加载器中表示不同的类或接口。</p>
+<p>When a class or interface C &#x3D; <code>&lt;N1, L1&gt;</code> makes a symbolic reference to a field or method of another class or interface D &#x3D; <code>&lt;N2, L2&gt;</code>, the symbolic reference includes a descriptor specifying the type of the field, or the return and argument types of the method. It is essential that any type name N mentioned in the field or method descriptor denote the same class or interface when loaded by L1 and when loaded by L2.</p>
+<p>当类或接口C &#x3D; <code>&lt;N1, L1&gt;</code> 对另一个类或接口D &#x3D; <code>&lt;N2, L2&gt;</code> 的字段或方法进行符号引用时，符号引用包括指定字段类型或方法的返回和参数类型的描述符。至关重要的是，字段或方法描述符中提到的任何类型名N在L1加载和L2加载时表示相同的类或接口。</p>
+<p>To ensure this, the Java Virtual Machine imposes loading constraints of the form <code>L1L2 N1 = N2</code> during preparation (§5.4.2) and resolution (§5.4.3). To enforce these constraints, the Java Virtual Machine will, at certain prescribed times (see §5.3.1, §5.3.2, §5.3.3, and §5.3.5), record that a particular loader is an initiating loader of a particular class. After recording that a loader is an initiating loader of a class, the Java Virtual Machine must immediately check to see if any loading constraints are violated. If so, the record is retracted, the Java Virtual Machine throws a <code>LinkageError</code>, and the loading operation that caused the recording to take place fails.</p>
+<p>为确保这一点，Java虚拟机在准备 (§5.4.2) 和解析 (§5.4.3) 期间施加形式为 <code>L1L2 N1 = N2</code> 的加载约束。为了强制执行这些约束，Java虚拟机将在某些规定的时间点（见§5.3.1，§5.3.2，§5.3.3，和§5.3.5）记录特定加载器是特定类的发起加载器。记录加载器是类的发起加载器后，Java虚拟机必须立即检查是否违反了任何加载约束。如果是，记录将被撤回，Java虚拟机抛出<code>LinkageError</code>，并且导致记录发生的加载操作失败。</p>
+<p>Similarly, after imposing a loading constraint (see §5.4.2, §5.4.3.2, §5.4.3.3, and §5.4.3.4), the Java Virtual Machine must immediately check to see if any loading constraints are violated. If so, the newly imposed loading constraint is retracted, the Java Virtual Machine throws a <code>LinkageError</code>, and the operation that caused the constraint to be imposed (either resolution or preparation, as the case may be) fails.</p>
+<p>同样，在施加加载约束后（见§5.4.2，§5.4.3.2，§5.4.3.3和§5.4.3.4），Java虚拟机必须立即检查是否违反了任何加载约束。如果是，刚施加的加载约束将被撤回，Java虚拟机抛出<code>LinkageError</code>，并且导致施加该约束的操作（无论是解析还是准备）失败。</p>
+<p>The situations described here are the only times at which the Java Virtual Machine checks whether any loading constraints have been violated. A loading constraint is violated if, and only if, all the following four conditions hold:</p>
+<p>这里描述的情况是Java虚拟机检查是否违反任何加载约束的唯一时间。加载约束在且仅在以下四个条件全部成立时违反：</p>
+<ol>
+<li><p>There exists a loader L such that L has been recorded by the Java Virtual Machine as an initiating loader of a class C named N.</p>
+</li>
+<li><p>存在一个加载器L，该加载器已被Java虚拟机记录为名为N的类C的发起加载器。</p>
+</li>
+<li><p>There exists a loader L’ such that L’ has been recorded by the Java Virtual Machine as an initiating loader of a class C’ named N.</p>
+</li>
+<li><p>存在一个加载器L’，该加载器已被Java虚拟机记录为名为N的类C’的发起加载器。</p>
+</li>
+<li><p>The equivalence relation defined by the (transitive closure of the) set of imposed L1L2 constraints implies <code>N1 = N2</code>.</p>
+</li>
+<li><p>由施加的L1L2约束集合（的传递闭包）定义的等价关系暗示 <code>N1 = N2</code>。</p>
+</li>
+<li><p>C ≠ C’.</p>
+</li>
+<li><p>C ≠ C’。</p>
+</li>
+</ol>
+<p>A full discussion of class loaders and type safety is beyond the scope of this specification.</p>
+<p>关于类加载器和类型安全的全面讨论超出了本规范的范围。</p>
+<p>For a more comprehensive discussion, readers are referred to <em>Dynamic Class Loading in the Java Virtual Machine</em> by Sheng Liang and Gilad Bracha (Proceedings of the 1998 ACM SIGPLAN Conference on Object-Oriented Programming Systems, Languages and Applications).</p>
+<p>有关更全面的讨论，读者可以参考Sheng Liang和Gilad Bracha撰写的《Java虚拟机中的动态类加载》一文（发表于1998年ACM SIGPLAN面向对象编程系统、语言和应用程序会议论文集）。</p>
+<hr>
+<h3 id="5-3-5-Deriving-a-Class-from-a-class-File-Representation"><a href="#5-3-5-Deriving-a-Class-from-a-class-File-Representation" class="headerlink" title="5.3.5 Deriving a Class from a class File Representation"></a>5.3.5 Deriving a Class from a class File Representation</h3><p>The following steps are used to derive a <code>Class</code> object for the non-array class or interface C denoted by N using loader L from a purported representation in class file format.</p>
+<p>以下步骤用于从类文件格式的假定表示中使用加载器L派生表示为N的非数组类或接口C的<code>Class</code>对象。</p>
+<ol>
+<li><p>First, the Java Virtual Machine determines whether it has already recorded that L is an initiating loader of a class or interface denoted by N. If so, this creation attempt is invalid and loading throws a <code>LinkageError</code>.</p>
+</li>
+<li><p>首先，Java虚拟机确定是否已经记录L是由N表示的类或接口的发起加载器。如果是这样，这次创建尝试无效，加载会抛出<code>LinkageError</code>。</p>
+</li>
+<li><p>Otherwise, the Java Virtual Machine attempts to parse the purported representation. However, the purported representation may not in fact be a valid representation of C.</p>
+</li>
+<li><p>否则，Java虚拟机会尝试解析假定表示。然而，假定表示可能实际上并不是C的有效表示。</p>
+</li>
+</ol>
+<p>This phase of loading must detect the following errors:</p>
+<p>加载的这个阶段必须检测以下错误：</p>
+<ul>
+<li><p>If the purported representation is not a <code>ClassFile</code> structure (§4.1, §4.8), loading throws an instance of <code>ClassFormatError</code>.</p>
+</li>
+<li><p>如果假定表示不是<code>ClassFile</code>结构 (§4.1, §4.8)，加载会抛出<code>ClassFormatError</code>实例。</p>
+</li>
+<li><p>Otherwise, if the purported representation is not of a supported major or minor version (§4.1), loading throws an instance of <code>UnsupportedClassVersionError</code>.</p>
+</li>
+<li><p>否则，如果假定表示不是受支持的主版本或次版本 (§4.1)，加载会抛出<code>UnsupportedClassVersionError</code>实例。</p>
+</li>
+<li><p>Otherwise, if the purported representation does not actually represent a class named N, loading throws an instance of <code>NoClassDefFoundError</code> or an instance of one of its subclasses.</p>
+</li>
+<li><p>否则，如果假定表示实际上并不表示名为N的类，加载会抛出<code>NoClassDefFoundError</code>实例或其子类的实例。</p>
+</li>
+</ul>
+<ol start="3">
+<li><p>If C has a direct superclass, the symbolic reference from C to its direct superclass is resolved using the algorithm of §5.4.3.1. Note that if C is an interface it must have <code>Object</code> as its direct superclass, which must already have been loaded. Only <code>Object</code> has no direct superclass.</p>
+</li>
+<li><p>如果C有直接超类，则使用§5.4.3.1的算法解析C到其直接超类的符号引用。请注意，如果C是接口，则必须将<code>Object</code>作为其直接超类，并且必须已经加载。只有<code>Object</code>没有直接超类。</p>
+</li>
+</ol>
+<p>Any exceptions that can be thrown due to class or interface resolution can be thrown as a result of this phase of loading. In addition, this phase of loading must detect the following errors:</p>
+<p>由于类或接口解析而可能抛出的任何异常都可能作为加载的这个阶段的结果抛出。此外，加载的这个阶段必须检测以下错误：</p>
+<ul>
+<li><p>If the class or interface named as the direct superclass of C is in fact an interface, loading throws an <code>IncompatibleClassChangeError</code>.</p>
+</li>
+<li><p>如果C的直接超类命名的类或接口实际上是接口，加载会抛出<code>IncompatibleClassChangeError</code>。</p>
+</li>
+<li><p>Otherwise, if any of the superclasses of C is C itself, loading throws a <code>ClassCircularityError</code>.</p>
+</li>
+<li><p>否则，如果C的任何超类是C本身，加载会抛出<code>ClassCircularityError</code>。</p>
+</li>
+</ul>
+<ol start="4">
+<li><p>If C has any direct superinterfaces, the symbolic references from C to its direct superinterfaces are resolved using the algorithm of §5.4.3.1.</p>
+</li>
+<li><p>如果C有任何直接超接口，则使用§5.4.3.1的算法解析C到其直接超接口的符号引用。</p>
+</li>
+</ol>
+<p>Any exceptions that can be thrown due to class or interface resolution can be thrown as a result of this phase of loading. In addition, this phase of loading must detect the following errors:</p>
+<p>由于类或接口解析而可能抛出的任何异常都可能作为加载的这个阶段的结果抛出。此外，加载的这个阶段必须检测以下错误：</p>
+<ul>
+<li><p>If any of the classes or interfaces named as direct superinterfaces of C is not in fact an interface, loading throws an <code>IncompatibleClassChangeError</code>.</p>
+</li>
+<li><p>如果C的直接超接口命名的类或接口实际上不是接口，加载会抛出<code>IncompatibleClassChangeError</code>。</p>
+</li>
+<li><p>Otherwise, if any of the superinterfaces of C is C itself, loading throws a <code>ClassCircularityError</code>.</p>
+</li>
+<li><p>否则，如果C的任何超接口是C本身，加载会抛出<code>ClassCircularityError</code>。</p>
+</li>
+</ul>
+<ol start="5">
+<li><p>The Java Virtual Machine marks C as having L as its defining class loader and records that L is an initiating loader of C (§5.3.4).</p>
+</li>
+<li><p>Java虚拟机将C标记为由L作为其定义类加载器，并记录L是C的发起加载器 (§5.3.4)。</p>
+</li>
+</ol>
+<hr>
+<h2 id="5-4-Linking"><a href="#5-4-Linking" class="headerlink" title="5.4 Linking"></a>5.4 Linking</h2><p>Linking a class or interface involves verifying and preparing that class or interface, its direct superclass, its direct superinterfaces, and its element type (if it is an array type), if necessary. Resolution of symbolic references in the class or interface is an optional part of linking.</p>
+<p>链接类或接口涉及验证和准备该类或接口、其直接超类、其直接超接口和其元素类型（如果是数组类型），如果有必要的话。解析类或接口中的符号引用是链接的可选部分。</p>
+<p>This specification allows an implementation flexibility as to when linking activities (and, because of recursion, loading) take place, provided that all of the following properties are maintained:</p>
+<p>本规范允许实现者在何时进行链接活动（并且由于递归，还包括加载）方面具有灵活性，前提是必须保持以下所有属性：</p>
+<ol>
+<li><p>A class or interface is completely loaded before it is linked.</p>
+</li>
+<li><p>类或接口在链接之前必须完全加载。</p>
+</li>
+<li><p>A class or interface is completely verified and prepared before it is initialized.</p>
+</li>
+<li><p>类或接口在初始化之前必须完全验证并准备。</p>
+</li>
+<li><p>Errors detected during linkage are thrown at a point in the program where some action is taken by the program that might, directly or indirectly, require linkage to the class or interface involved in the error.</p>
+</li>
+<li><p>在链接过程中检测到的错误会在程序中某个采取行动的点上抛出，该行动可能直接或间接地需要链接到涉及错误的类或接口。</p>
+</li>
+</ol>
+<p>For example, a Java Virtual Machine implementation may choose to resolve each symbolic reference in a class or interface individually when it is used (“lazy” or “late” resolution), or to resolve them all at once when the class is being verified (“eager” or “static” resolution). This means that the resolution process may continue, in some implementations, after a class or interface has been initialized. Whichever strategy is followed, any error detected during resolution must be thrown at a point in the program that (directly or indirectly) uses a symbolic reference to the class or interface.</p>
+<p>例如，Java虚拟机实现可以选择在使用类或接口中的每个符号引用时单独解析它们（“惰性”或“延迟”解析），或者在验证类时一次性解析它们（“急切”或“静态”解析）。这意味着在某些实现中，解析过程可能在类或接口初始化之后继续进行。无论采用哪种策略，解析过程中检测到的任何错误必须在程序中使用符号引用类或接口的点上抛出。</p>
+<p>Because linking involves the allocation of new data structures, it may fail with an <code>OutOfMemoryError</code>.</p>
+<p>由于链接涉及分配新的数据结构，因此可能因<code>OutOfMemoryError</code>失败。</p>
+<h3 id="5-4-1-Verification"><a href="#5-4-1-Verification" class="headerlink" title="5.4.1 Verification"></a>5.4.1 Verification</h3><p>Verification (§4.10) ensures that the binary representation of a class or interface is structurally correct (§4.9). Verification may cause additional classes and interfaces to be loaded (§5.3) but need not cause them to be verified or prepared.</p>
+<p>验证 (§4.10) 确保类或接口的二进制表示在结构上是正确的 (§4.9)。验证可能会导致加载其他类和接口 (§5.3)，但不必对它们进行验证或准备。</p>
+<p>If the binary representation of a class or interface does not satisfy the static or structural constraints listed in §4.9, then a <code>VerifyError</code> must be thrown at the point in the program that caused the class or interface to be verified.</p>
+<p>如果类或接口的二进制表示不满足§4.9中列出的静态或结构约束，则必须在导致类或接口被验证的程序点上抛出<code>VerifyError</code>。</p>
+<p>If an attempt by the Java Virtual Machine to verify a class or interface fails because an error is thrown that is an instance of <code>LinkageError</code> (or a subclass), then subsequent attempts to verify the class or interface always fail with the same error that was thrown as a result of the initial verification attempt.</p>
+<p>如果Java虚拟机尝试验证类或接口失败，因为抛出了<code>LinkageError</code>（或其子类）的实例，则随后对该类或接口的验证尝试将始终因最初验证尝试抛出的相同错误而失败。</p>
+<h3 id="5-4-2-Preparation"><a href="#5-4-2-Preparation" class="headerlink" title="5.4.2 Preparation"></a>5.4.2 Preparation</h3><p>Preparation involves creating the static fields for a class or interface and initializing such fields to their default values (§2.3, §2.4). This does not require the execution of any Java Virtual Machine code; explicit initializers for static fields are executed as part of initialization (§5.5), not preparation.</p>
+<p>准备包括为类或接口创建静态字段并将这些字段初始化为其默认值 (§2.3, §2.4)。这不需要执行任何Java虚拟机代码；静态字段的显式初始化器作为初始化 (§5.5) 的一部分执行，而不是准备的一部分。</p>
+<p>During preparation of a class or interface C, the Java Virtual Machine also imposes loading constraints (§5.3.4). Let L1 be the defining loader of C. For each method m declared in C that overrides (§5.4.5) a method declared in a superclass or superinterface <code>&lt;D, L2&gt;</code>, the Java Virtual Machine imposes the following loading constraints:</p>
+<p>在准备类或接口C期间，Java虚拟机还施加加载约束 (§5.3.4)。设L1为C的定义加载器。对于C中声明的每个覆盖 (§5.4.5) 超类或超接口 <code>&lt;D, L2&gt;</code> 声明的方法m，Java虚拟机施加以下加载约束：</p>
+<ol>
+<li><p>Given that the return type of m is Tr, and that the formal parameter types of m are Tf1, …, Tfn, then:</p>
+</li>
+<li><p>给定m的返回类型是Tr，m的形式参数类型是Tf1，…，Tfn，那么：</p>
+</li>
+</ol>
+<ul>
+<li><p>If Tr is not an array type, let Tr0 be Tr; otherwise, let Tr0 be the element type (§2.4) of Tr.</p>
+</li>
+<li><p>如果Tr不是数组类型，则设Tr0为Tr；否则，设Tr0为Tr的元素类型 (§2.4)。</p>
+</li>
+<li><p>For i &#x3D; 1 to n: If Tfi is not an array type, let Tfi0 be Tfi; otherwise, let Tfi0 be the element type (§2.4) of Tfi.</p>
+</li>
+<li><p>对于i &#x3D; 1到n：如果Tfi不是数组类型，则设Tfi0为Tfi；否则，设Tfi0为Tfi的元素类型 (§2.4)。</p>
+</li>
+<li><p>L1L2 Then Tr0 &#x3D; Tr and Tfi0 &#x3D; Tfi for i &#x3D; 1 to n.</p>
+</li>
+<li><p>L1L2 然后Tr0 &#x3D; Tr且Tfi0 &#x3D; Tfi，适用于i &#x3D; 1到n。</p>
+</li>
+</ul>
+<p>Furthermore, if C implements a method m declared in a superinterface <code>&lt;I, L3&gt;</code> of C, but C does not itself declare the method m, then let <code>&lt;D, L2&gt;</code> be the superclass of C that declares the implementation of method m inherited by C. The Java Virtual Machine imposes the following constraints:</p>
+<p>此外，如果C实现了超接口 <code>&lt;I, L3&gt;</code> 声明的方法m，但C本身并未声明该方法m，则设 <code>&lt;D, L2&gt;</code> 为C的超类，声明了C继承的方法m的实现。Java虚拟机施加以下约束：</p>
+<ol>
+<li><p>Given that the return type of m is Tr, and that the formal parameter types of m are Tf1, …, Tfn, then:</p>
+</li>
+<li><p>给定m的返回类型是Tr，m的形式参数类型是Tf1，…，Tfn，那么：</p>
+</li>
+</ol>
+<ul>
+<li><p>If Tr is not an array type, let Tr0 be Tr; otherwise, let Tr0 be the element type (§2.4) of Tr.</p>
+</li>
+<li><p>如果Tr不是数组类型，则设Tr0为Tr；否则，设Tr0为Tr的元素类型 (§2.4)。</p>
+</li>
+<li><p>For i &#x3D; 1 to n: If Tfi is not an array type, let Tfi0 be Tfi; otherwise, let Tfi0 be the element type (§2.4) of Tfi.</p>
+</li>
+<li><p>对于i &#x3D; 1到n：如果Tfi不是数组类型，则设Tfi0为Tfi；否则，设Tfi0为Tfi的元素类型 (§2.4)。</p>
+</li>
+<li><p>L23 Then Tr0 &#x3D; Tr and Tfi0 &#x3D; Tfi for i &#x3D; 0 to n.</p>
+</li>
+<li><p>L23 然后Tr0 &#x3D; Tr且Tfi0 &#x3D; Tfi，适用于i &#x3D; 0到n。</p>
+</li>
+</ul>
+<p>Preparation may occur at any time following creation but must be completed prior to initialization.</p>
+<p>准备可能发生在创建之后的任何时间，但必须在初始化之前完成。</p>
+<h3 id="5-4-3-Resolution"><a href="#5-4-3-Resolution" class="headerlink" title="5.4.3 Resolution"></a>5.4.3 Resolution</h3><p>The Java Virtual Machine instructions <code>anewarray</code>, <code>checkcast</code>, <code>getfield</code>, <code>getstatic</code>, <code>instanceof</code>, <code>invokedynamic</code>, <code>invokeinterface</code>, <code>invokespecial</code>, <code>invokestatic</code>, <code>invokevirtual</code>, <code>ldc</code>, <code>ldc_w</code>, <code>multianewarray</code>, <code>new</code>, <code>putfield</code>, and <code>putstatic</code> make symbolic references to the run-time constant pool. Execution of any of these instructions requires resolution of its symbolic reference.</p>
+<p>Java虚拟机指令<code>anewarray</code>、<code>checkcast</code>、<code>getfield</code>、<code>getstatic</code>、<code>instanceof</code>、<code>invokedynamic</code>、<code>invokeinterface</code>、<code>invokespecial</code>、<code>invokestatic</code>、<code>invokevirtual</code>、<code>ldc</code>、<code>ldc_w</code>、<code>multianewarray</code>、<code>new</code>、<code>putfield</code>和<code>putstatic</code>对运行时常量池进行了符号引用。执行任何这些指令都需要解析其符号引用。</p>
+<p>Resolution is the process of dynamically determining concrete values from symbolic references in the run-time constant pool.</p>
+<p>解析是从运行时常量池中的符号引用动态确定具体值的过程。</p>
+<p>Resolution of the symbolic reference of one occurrence of an <code>invokedynamic</code> instruction does not imply that the same symbolic reference is considered resolved for any other <code>invokedynamic</code> instruction.</p>
+<p>一次<code>invokedynamic</code>指令的符号引用解析并不意味着该符号引用在任何其他<code>invokedynamic</code>指令中都被认为已解析。</p>
+<p>For all other instructions above, resolution of the symbolic reference of one occurrence of an instruction does imply that the same symbolic reference is considered resolved for any other non-<code>invokedynamic</code> instruction.</p>
+<p>对于上述所有其他指令，一次指令的符号引用解析确实意味着该符号引用在任何其他非<code>invokedynamic</code>指令中都被认为已解析。</p>
+<p>(The above text implies that the concrete value determined by resolution for a specific <code>invokedynamic</code> instruction is a call site object bound to that specific <code>invokedynamic</code> instruction.)</p>
+<p>（上述文本暗示，解析为特定<code>invokedynamic</code>指令确定的具体值是绑定到该特定<code>invokedynamic</code>指令的调用站点对象。）</p>
+<p>Resolution can be attempted on a symbolic reference that has already been resolved. An attempt to resolve a symbolic reference that has already successfully been resolved always succeeds trivially and always results in the same entity produced by the initial resolution of that reference.</p>
+<p>解析可以尝试在已解析的符号引用上进行。尝试解析已经成功解析的符号引用总是轻而易举地成功，并且总是产生最初解析该引用时的相同实体。</p>
+<p>If an error occurs during resolution of a symbolic reference, then an instance of <code>IncompatibleClassChangeError</code> (or a subclass) must be thrown at a point in the program that (directly or indirectly) uses the symbolic reference.</p>
+<p>如果在解析符号引用期间发生错误，则必须在程序中使用（直接或间接）符号引用的点上抛出<code>IncompatibleClassChangeError</code>（或其子类）实例。</p>
+<p>If an attempt by the Java Virtual Machine to resolve a symbolic reference fails because an error is thrown that is an instance of <code>LinkageError</code> (or a subclass), then subsequent attempts to resolve the reference always fail with the same error that was thrown as a result of the initial resolution attempt.</p>
+<p>如果Java虚拟机尝试解析符号引用失败，因为抛出了<code>LinkageError</code>（或其子类）的实例，则随后对该引用的解析尝试将始终因最初解析尝试抛出的相同错误而失败。</p>
+<p>A symbolic reference to a call site specifier by a specific <code>invokedynamic</code> instruction must not be resolved prior to execution of that instruction.</p>
+<p>特定<code>invokedynamic</code>指令对调用站点说明符的符号引用不得在执行该指令之前解析。</p>
+<p>In the case of failed resolution of an <code>invokedynamic</code> instruction, the bootstrap method is not re-executed on subsequent resolution attempts.</p>
+<p>如果<code>invokedynamic</code>指令解析失败，则在随后的解析尝试中不会重新执行引导方法。</p>
+<p>Certain of the instructions above require additional linking checks when resolving symbolic references. For instance, in order for a <code>getfield</code> instruction to successfully resolve the symbolic reference to the field on which it operates, it must not only complete the field resolution steps given in §5.4.3.2 but also check that the field is not static. If it is a static field, a linking exception must be thrown.</p>
+<p>上述某些指令在解析符号引用时需要额外的链接检查。例如，为了使<code>getfield</code>指令成功解析它操作的字段的符号引用，它不仅必须完成§5.4.3.2中给出的字段解析步骤，还必须检查字段是否为静态。如果是静态字段，则必须抛出链接异常。</p>
+<p>Notably, in order for an <code>invokedynamic</code> instruction to successfully resolve the symbolic reference to a call site specifier, the bootstrap method specified therein must complete normally and return a suitable call site object. If the bootstrap method completes abruptly or returns an unsuitable call site object, a linking exception must be thrown.</p>
+<p>特别是，为了使<code>invokedynamic</code>指令成功解析调用站点说明符的符号引用，其中指定的引导方法必须正常完成并返回合适的调用站点对象。如果引导方法突然完成或返回不合适的调用站点对象，则必须抛出链接异常。</p>
+<p>Linking exceptions generated by checks that are specific to the execution of a particular Java Virtual Machine instruction are given in the description of that instruction and are not covered in this general discussion of resolution. Note that such exceptions, although described as part of the execution of Java Virtual Machine instructions rather than resolution, are still properly considered failures of resolution.</p>
+<p>由特定Java虚拟机指令执行特定检查生成的链接异常在该指令的描述中给出，并未包含在本一般解析讨论中。请注意，尽管这些异常作为Java虚拟机指令执行的一部分而非解析描述，但仍然被适当地认为是解析失败。</p>
+<p>The following sections describe the process of resolving a symbolic reference in the run-time constant pool (§5.1) of a class or interface D. Details of resolution differ with the kind of symbolic reference to be resolved.</p>
+<p>以下各节描述了在类或接口D的运行时常量池 (§5.1) 中解析符号引用的过程。解析的细节因符号引用的种类而异。</p>
+<h4 id="5-4-3-1-Class-and-Interface-Resolution"><a href="#5-4-3-1-Class-and-Interface-Resolution" class="headerlink" title="5.4.3.1 Class and Interface Resolution"></a>5.4.3.1 Class and Interface Resolution</h4><p>To resolve an unresolved symbolic reference from D to a class or interface C denoted by N, the following steps are performed:</p>
+<p>要解析D到由N表示的类或接口C的未解析符号引用，执行以下步骤：</p>
+<ol>
+<li><p>The defining class loader of D is used to create a class or interface denoted by N. This class or interface is C. The details of the process are given in §5.3.</p>
+</li>
+<li><p>使用D的定义类加载器创建由N表示的类或接口。该类或接口是C。该过程的细节见§5.3。</p>
+</li>
+</ol>
+<p>Any exception that can be thrown as a result of failure of class or interface creation can thus be thrown as a result of failure of class and interface resolution.</p>
+<p>由于类或接口创建失败而可能抛出的任何异常，因此也可能由于类和接口解析失败而抛出。</p>
+<ol start="2">
+<li><p>If C is an array class and its element type is a reference type, then a symbolic reference to the class or interface representing the element type is resolved by invoking the algorithm in §5.4.3.1 recursively.</p>
+</li>
+<li><p>如果C是数组类并且其元素类型是引用类型，则通过递归调用§5.4.3.1中的算法解析表示元素类型的类或接口的符号引用。</p>
+</li>
+<li><p>Finally, access permissions to C are checked.</p>
+</li>
+<li><p>最后，检查对C的访问权限。</p>
+</li>
+</ol>
+<ul>
+<li><p>If C is not accessible (§5.4.4) to D, class or interface resolution throws an <code>IllegalAccessError</code>.</p>
+</li>
+<li><p>如果C对D不可访问 (§5.4.4)，类或接口解析会抛出<code>IllegalAccessError</code>。</p>
+</li>
+</ul>
+<p>This condition can occur, for example, if C is a class that was originally declared to be public but was changed to be non-public after D was compiled.</p>
+<p>例如，如果C是一个类，最初声明为公共的，但在D编译后更改为非公共的，则可能会发生这种情况。</p>
+<p>If steps 1 and 2 succeed but step 3 fails, C is still valid and usable. Nevertheless, resolution fails, and D is prohibited from accessing C.</p>
+<p>如果步骤1和2成功，但步骤3失败，则C仍然有效且可用。然而，解析失败，并且禁止D访问C。</p>
+<h4 id="5-4-3-2-Field-Resolution"><a href="#5-4-3-2-Field-Resolution" class="headerlink" title="5.4.3.2 Field Resolution"></a>5.4.3.2 Field Resolution</h4><p>To resolve an unresolved symbolic reference from <em>D</em> to a field in a class or interface<br><em>C</em>, the symbolic reference to <em>C</em> given by the field reference must first be resolved<br>(§5.4.3.1). Therefore, any exception that can be thrown as a result of failure of<br>resolution of a class or interface reference can be thrown as a result of failure of<br>field resolution. If the reference to <em>C</em> can be successfully resolved, an exception<br>relating to the failure of resolution of the field reference itself can be thrown.</p>
+<p>要解析类或接口D对类或接口C中字段的未解析符号引用，首先必须解析字段引用所给定的对 C 的符号引用（§5.4.3.1）。因此，解析类或接口引用失败可能引发的任何异常，也可以在字段解析失败时抛出。如果对C的引用能够成功解析，那么可能会抛出与字段引用解析失败相关的异常。如果C的引用可以成功解析，则可能抛出与字段引用解析失败相关的异常。</p>
+<p>When resolving a field reference, field resolution first attempts to look up the referenced field in C and its superclasses:</p>
+<p>在解析字段引用时，字段解析首先尝试在C及其超类中查找引用的字段：</p>
+<ol>
+<li><p>If C declares a field with the name and descriptor specified by the field reference, field lookup succeeds. The declared field is the result of the field lookup.</p>
+</li>
+<li><p>如果C声明了一个具有字段引用指定的名称和描述符的字段，则字段查找成功。声明的字段是字段查找的结果。</p>
+</li>
+<li><p>Otherwise, field lookup is applied recursively to the direct superinterfaces of the specified class or interface C.</p>
+</li>
+<li><p>否则，字段查找递归地应用于指定类或接口C的直接超接口。</p>
+</li>
+<li><p>Otherwise, if C has a superclass S, field lookup is applied recursively to S.</p>
+</li>
+<li><p>否则，如果C有一个超类S，字段查找递归地应用于S。</p>
+</li>
+<li><p>Otherwise, field lookup fails.</p>
+</li>
+<li><p>否则，字段查找失败。</p>
+</li>
+</ol>
+<p>Then:</p>
+<p>接着：</p>
+<ul>
+<li><p>If field lookup fails, field resolution throws a <code>NoSuchFieldError</code>.</p>
+</li>
+<li><p>如果字段查找失败，字段解析会抛出<code>NoSuchFieldError</code>。</p>
+</li>
+<li><p>Otherwise, if field lookup succeeds but the referenced field is not accessible (§5.4.4) to D, field resolution throws an <code>IllegalAccessError</code>.</p>
+</li>
+<li><p>否则，如果字段查找成功，但对D不可访问 (§5.4.4)，字段解析会抛出<code>IllegalAccessError</code>。</p>
+</li>
+<li><p>Otherwise, let <code>&lt;E, L1&gt;</code> be the class or interface in which the referenced field is actually declared and let <code>L2</code> be the defining loader of D.</p>
+</li>
+<li><p>否则，设 <code>&lt;E, L1&gt;</code> 为实际声明引用字段的类或接口，设 <code>L2</code> 为D的定义加载器。</p>
+</li>
+</ul>
+<p>Given that the type of the referenced field is <code>Tf</code>, let <code>Tf0</code> be <code>Tf</code> if <code>Tf</code> is not an array type, and let <code>Tf0</code> be the element type (§2.4) of <code>Tf</code> otherwise.</p>
+<p>假定引用字段的类型为<code>Tf</code>，则如果<code>Tf</code>不是数组类型，则设<code>Tf0</code>为<code>Tf</code>，否则设<code>Tf0</code>为<code>Tf</code>的元素类型 (§2.4)。</p>
+<p>The Java Virtual Machine must impose the loading constraint that <code>L1L2 Tf0 = Tf</code> (§5.3.4).</p>
+<p>Java虚拟机必须施加加载约束 <code>L1L2 Tf0 = Tf</code> (§5.3.4)。</p>
+<h4 id="5-4-3-3-Method-Resolution"><a href="#5-4-3-3-Method-Resolution" class="headerlink" title="5.4.3.3 Method Resolution"></a>5.4.3.3 Method Resolution</h4><p>To resolve an unresolved symbolic reference from D to a method in a class C, the symbolic reference to C given by the method reference is first resolved (§5.4.3.1). Therefore, any exception that can be thrown as a result of failure of resolution of a class reference can be thrown as a result of failure of method resolution. If the reference to C can be successfully resolved, exceptions relating to the resolution of the method reference itself can be thrown.</p>
+<p>要解析D到类C中的方法的未解析符号引用，首先要解析方法引用提供的C的符号引用 (§5.4.3.1)。因此，由于类引用解析失败而可能抛出的任何异常也可能由于方法解析失败而抛出。如果C的引用能够成功解析，则可能抛出与方法引用解析本身有关的异常。</p>
+<p>When resolving a method reference:</p>
+<p>在解析方法引用时：</p>
+<ol>
+<li><p>If C is an interface, method resolution throws an <code>IncompatibleClassChangeError</code>.</p>
+</li>
+<li><p>如果C是一个接口，方法解析会抛出<code>IncompatibleClassChangeError</code>。</p>
+</li>
+<li><p>Otherwise, method resolution attempts to locate the referenced method in C and its superclasses:</p>
+</li>
+<li><p>否则，方法解析尝试在C及其超类中定位引用的方法：</p>
+</li>
+</ol>
+<ul>
+<li><p>If C declares exactly one method with the name specified by the method reference, and the declaration is a signature polymorphic method (§2.9), then method lookup succeeds. All the class names mentioned in the descriptor are resolved (§5.4.3.1).</p>
+</li>
+<li><p>如果C声明了一个与方法引用指定的名称完全一致的方法，并且该声明是签名多态方法 (§2.9)，则方法查找成功。描述符中提到的所有类名都会被解析 (§5.4.3.1)。</p>
+</li>
+<li><p>The resolved method is the signature polymorphic method declaration. It is not necessary for C to declare a method with the descriptor specified by the method reference.</p>
+</li>
+<li><p>解析出来的方法就是签名多态方法声明。C不需要声明与方法引用指定的描述符一致的方法。</p>
+</li>
+<li><p>Otherwise, if C declares a method with the name and descriptor specified by the method reference, method lookup succeeds.</p>
+</li>
+<li><p>否则，如果C声明了一个具有方法引用指定的名称和描述符的方法，方法查找成功。</p>
+</li>
+<li><p>Otherwise, if C has a superclass, step 2 of method resolution is recursively invoked on the direct superclass of C.</p>
+</li>
+<li><p>否则，如果C有一个超类，则在C的直接超类上递归调用方法解析的第2步。</p>
+</li>
+</ul>
+<ol start="3">
+<li><p>Otherwise, method resolution attempts to locate the referenced method in the superinterfaces of the specified class C:</p>
+</li>
+<li><p>否则，方法解析尝试在指定类C的超接口中定位引用的方法：</p>
+</li>
+</ol>
+<ul>
+<li><p>If the maximally-specific superinterface methods of C for the name and descriptor specified by the method reference include exactly one method that does not have its <code>ACC_ABSTRACT</code> flag set, then this method is chosen and method lookup succeeds.</p>
+</li>
+<li><p>如果C的超接口中具有方法引用指定的名称和描述符的最具体的方法中恰好有一个没有设置<code>ACC_ABSTRACT</code>标志的方法，则选择此方法并且方法查找成功。</p>
+</li>
+<li><p>Otherwise, if any superinterface of C declares a method with the name and descriptor specified by the method reference that has neither its <code>ACC_PRIVATE</code> flag nor its <code>ACC_STATIC</code> flag set, one of these is arbitrarily chosen and method lookup succeeds.</p>
+</li>
+<li><p>否则，如果C的任何超接口声明了一个具有方法引用指定的名称和描述符且没有设置<code>ACC_PRIVATE</code>或<code>ACC_STATIC</code>标志的方法，则从这些方法中任意选择一个，方法查找成功。</p>
+</li>
+<li><p>Otherwise, method lookup fails.</p>
+</li>
+<li><p>否则，方法查找失败。</p>
+</li>
+</ul>
+<p>A maximally-specific superinterface method of a class or interface C for a particular method name and descriptor is any method for which all of the following are true:</p>
+<p>对于类或接口C的特定方法名称和描述符，最具体的超接口方法是满足以下所有条件的任何方法：</p>
+<ol>
+<li><p>The method is declared in a superinterface (direct or indirect) of C.</p>
+</li>
+<li><p>该方法声明在C的超接口（直接或间接）中。</p>
+</li>
+<li><p>The method is declared with the specified name and descriptor.</p>
+</li>
+<li><p>该方法以指定的名称和描述符声明。</p>
+</li>
+<li><p>The method has neither its <code>ACC_PRIVATE</code> flag nor its <code>ACC_STATIC</code> flag set.</p>
+</li>
+<li><p>该方法没有设置<code>ACC_PRIVATE</code>或<code>ACC_STATIC</code>标志。</p>
+</li>
+<li><p>Where the method is declared in interface I, there exists no other maximally-specific superinterface method of C with the specified name and descriptor that is declared in a subinterface of I.</p>
+</li>
+<li><p>当方法在接口I中声明时，C没有其他具有指定名称和描述符并且在I的子接口中声明的最具体的超接口方法。</p>
+</li>
+</ol>
+<p>The result of method resolution is determined by whether method lookup succeeds or fails:</p>
+<p>方法解析的结果取决于方法查找的成功或失败：</p>
+<ul>
+<li><p>If method lookup fails, method resolution throws a <code>NoSuchMethodError</code>.</p>
+</li>
+<li><p>如果方法查找失败，方法解析会抛出<code>NoSuchMethodError</code>。</p>
+</li>
+<li><p>Otherwise, if method lookup succeeds and the referenced method is not accessible (§5.4.4) to D, method resolution throws an <code>IllegalAccessError</code>.</p>
+</li>
+<li><p>否则，如果方法查找成功，但对D不可访问 (§5.4.4)，方法解析会抛出<code>IllegalAccessError</code>。</p>
+</li>
+<li><p>Otherwise, let <code>&lt;E, L1&gt;</code> be the class or interface in which the referenced method m is actually declared, and let <code>L2</code> be the defining loader of D.</p>
+</li>
+<li><p>否则，设 <code>&lt;E, L1&gt;</code> 为实际声明引用方法m的类或接口，设 <code>L2</code> 为D的定义加载器。</p>
+</li>
+</ul>
+<p>Given that the return type of m is <code>Tr</code>, and that the formal parameter types of m are <code>Tf1, ..., Tfn</code>, then:</p>
+<p>给定m的返回类型是<code>Tr</code>，m的形式参数类型是<code>Tf1, ..., Tfn</code>，那么：</p>
+<ul>
+<li><p>If <code>Tr</code> is not an array type, let <code>Tr0</code> be <code>Tr</code>; otherwise, let <code>Tr0</code> be the element type (§2.4) of <code>Tr</code>.</p>
+</li>
+<li><p>如果<code>Tr</code>不是数组类型，则设<code>Tr0</code>为<code>Tr</code>；否则，设<code>Tr0</code>为<code>Tr</code>的元素类型 (§2.4)。</p>
+</li>
+<li><p>For i &#x3D; 1 to n: If <code>Tfi</code> is not an array type, let <code>Tfi0</code> be <code>Tfi</code>; otherwise, let <code>Tfi0</code> be the element type (§2.4) of <code>Tfi</code>.</p>
+</li>
+<li><p>对于i &#x3D; 1到n：如果<code>Tfi</code>不是数组类型，则设<code>Tfi0</code>为<code>Tfi</code>；否则，设<code>Tfi0</code>为<code>Tfi</code>的元素类型 (§2.4)。</p>
+</li>
+<li><p>The Java Virtual Machine must impose the loading constraints <code>L1L2 Tr0 = Tr</code> and <code>L1L2 Tfi0 = Tfi</code> for i &#x3D; 0 to n (§5.3.4).</p>
+</li>
+<li><p>Java虚拟机必须施加加载约束 <code>L1L2 Tr0 = Tr</code> 和 <code>L1L2 Tfi0 = Tfi</code>，适用于i &#x3D; 0到n (§5.3.4)。</p>
+</li>
+</ul>
+<p>When resolution searches for a method in the class’s superinterfaces, the best outcome is to identify a maximally-specific non-abstract method. It is possible that this method will be chosen by method selection, so it is desirable to add class loader constraints for it.</p>
+<p>当解析在类的超接口中查找方法时，最好的结果是确定一个最具体的非抽象方法。可能会选择此方法进行方法选择，因此为它添加类加载器约束是可取的。</p>
+<p>Otherwise, the result is nondeterministic. This is not new: The Java® Virtual Machine Specification has never identified exactly which method is chosen, and how “ties” should be broken. Prior to Java SE 8, this was mostly an unobservable distinction. However, beginning with Java SE 8, the set of interface methods is more heterogeneous, so care must be taken to avoid problems with nondeterministic behavior. Thus:</p>
+<p>否则，结果是非确定性的。这并不新鲜：Java®虚拟机规范从未明确指出究竟选择了哪个方法，以及如何“打破平局”。在Java SE 8之前，这大多是一个不可观察的区别。然而，从Java SE 8开始，接口方法的集合更加异质，因此必须小心避免非确定性行为的问题。因此：</p>
+<ol>
+<li><p>Superinterface methods that are private and static are ignored by resolution. This is consistent with the Java programming language, where such interface methods are not inherited.</p>
+</li>
+<li><p>私有和静态的超接口方法在解析时被忽略。这与Java编程语言一致，在Java中，这些接口方法不会被继承。</p>
+</li>
+<li><p>Any behavior controlled by the resolved method should not depend on whether the method is abstract or not.</p>
+</li>
+<li><p>由解析方法控制的任何行为都不应依赖于方法是否是抽象的。</p>
+</li>
+</ol>
+<p>Note that if the result of resolution is an abstract method, the referenced class C may be non-abstract. Requiring C to be abstract would conflict with the nondeterministic choice of superinterface methods. Instead, resolution assumes that the runtime class of the invoked object has a concrete implementation of the method.</p>
+<p>请注意，如果解析的结果是一个抽象方法，则引用的类C可能是非抽象的。要求C是抽象的将与超接口方法的非确定性选择相冲突。相反，解析假定被调用对象的运行时类具有该方法的具体实现。</p>
+<h4 id="5-4-3-4-Interface-Method-Resolution"><a href="#5-4-3-4-Interface-Method-Resolution" class="headerlink" title="5.4.3.4 Interface Method Resolution"></a>5.4.3.4 Interface Method Resolution</h4><p>To resolve an unresolved symbolic reference from D to an interface method in an interface C, the symbolic reference to C given by the interface method reference is first resolved (§5.4.3.1). Therefore, any exception that can be thrown as a result of failure of resolution of an interface reference can be thrown as a result of failure of interface method resolution. If the reference to C can be successfully resolved, exceptions relating to the resolution of the interface method reference itself can be thrown.</p>
+<p>要解析D到接口C中的接口方法的未解析符号引用，首先要解析接口方法引用提供的C的符号引用 (§5.4.3.1)。因此，由于接口引用解析失败而可能抛出的任何异常也可能由于接口方法解析失败而抛出。如果C的引用能够成功解析，则可能抛出与接口方法引用解析本身有关的异常。</p>
+<p>When resolving an interface method reference:</p>
+<p>在解析接口方法引用时：</p>
+<ol>
+<li><p>If C is not an interface, interface method resolution throws an <code>IncompatibleClassChangeError</code>.</p>
+</li>
+<li><p>如果C不是接口，接口方法解析会抛出<code>IncompatibleClassChangeError</code>。</p>
+</li>
+<li><p>Otherwise, if C declares a method with the name and descriptor specified by the interface method reference, method lookup succeeds.</p>
+</li>
+<li><p>否则，如果C声明了一个具有接口方法引用指定的名称和描述符的方法，方法查找成功。</p>
+</li>
+<li><p>Otherwise, if the class <code>Object</code> declares a method with the name and descriptor specified by the interface method reference, which has its <code>ACC_PUBLIC</code> flag set and does not have its <code>ACC_STATIC</code> flag set, method lookup succeeds.</p>
+</li>
+<li><p>否则，如果类<code>Object</code>声明了一个具有接口方法引用指定的名称和描述符的方法，并且该方法设置了<code>ACC_PUBLIC</code>标志但没有设置<code>ACC_STATIC</code>标志，方法查找成功。</p>
+</li>
+<li><p>Otherwise, if the maximally-specific superinterface methods (§5.4.3.3) of C for the name and descriptor specified by the method reference include exactly one method that does not have its <code>ACC_ABSTRACT</code> flag set, then this method is chosen and method lookup succeeds.</p>
+</li>
+<li><p>否则，如果C的超接口中具有方法引用指定的名称和描述符的最具体的方法中恰好有一个没有设置<code>ACC_ABSTRACT</code>标志的方法，则选择此方法并且方法查找成功。</p>
+</li>
+<li><p>Otherwise, if any superinterface of C declares a method with the name and descriptor specified by the method reference that has neither its <code>ACC_PRIVATE</code> flag nor its <code>ACC_STATIC</code> flag set, one of these is arbitrarily chosen and method lookup succeeds.</p>
+</li>
+<li><p>否则，如果C的任何超接口声明了一个具有方法引用指定的名称和描述符且没有设置<code>ACC_PRIVATE</code>或<code>ACC_STATIC</code>标志的方法，则从这些方法中任意选择一个，方法查找成功。</p>
+</li>
+<li><p>Otherwise, method lookup fails.</p>
+</li>
+<li><p>否则，方法查找失败。</p>
+</li>
+</ol>
+<p>The result of interface method resolution is determined by whether method lookup succeeds or fails:</p>
+<p>接口方法解析的结果取决于方法查找的成功或失败：</p>
+<ul>
+<li><p>If method lookup fails, interface method resolution throws a <code>NoSuchMethodError</code>.</p>
+</li>
+<li><p>如果方法查找失败，接口方法解析会抛出<code>NoSuchMethodError</code>。</p>
+</li>
+<li><p>If method lookup succeeds and the referenced method is not accessible (§5.4.4) to D, interface method resolution throws an <code>IllegalAccessError</code>.</p>
+</li>
+<li><p>如果方法查找成功，但对D不可访问 (§5.4.4)，接口方法解析会抛出<code>IllegalAccessError</code>。</p>
+</li>
+<li><p>Otherwise, let <code>&lt;E, L1&gt;</code> be the class or interface in which the referenced interface method m is actually declared, and let <code>L2</code> be the defining loader of D.</p>
+</li>
+<li><p>否则，设 <code>&lt;E, L1&gt;</code> 为实际声明引用接口方法m的类或接口，设 <code>L2</code> 为D的定义加载器。</p>
+</li>
+</ul>
+<p>Given that the return type of m is <code>Tr</code>, and that the formal parameter types of m are <code>Tf1, ..., Tfn</code>, then:</p>
+<p>给定m的返回类型是<code>Tr</code>，m的形式参数类型是<code>Tf1, ..., Tfn</code>，那么：</p>
+<ul>
+<li><p>If <code>Tr</code> is not an array type, let <code>Tr0</code> be <code>Tr</code>; otherwise, let <code>Tr0</code> be the element type (§2.4) of <code>Tr</code>.</p>
+</li>
+<li><p>如果<code>Tr</code>不是数组类型，则设<code>Tr0</code>为<code>Tr</code>；否则，设<code>Tr0</code>为<code>Tr</code>的元素类型 (§2.4)。</p>
+</li>
+<li><p>For i &#x3D; 1 to n: If <code>Tfi</code> is not an array type, let <code>Tfi0</code> be <code>Tfi</code>; otherwise, let <code>Tfi0</code> be the element type (§2.4) of <code>Tfi</code>.</p>
+</li>
+<li><p>对于i &#x3D; 1到n：如果<code>Tfi</code>不是数组类型，则设<code>Tfi0</code>为<code>Tfi</code>；否则，设<code>Tfi0</code>为<code>Tfi</code>的元素类型 (§2.4)。</p>
+</li>
+<li><p>The Java Virtual Machine must impose the loading constraints <code>L1L2 Tr0 = Tr</code> and <code>L1L2 Tfi0 = Tfi</code> for i &#x3D; 0 to n (§5.3.4).</p>
+</li>
+<li><p>Java虚拟机必须施加加载约束 <code>L1L2 Tr0 = Tr</code> 和 <code>L1L2 Tfi0 = Tfi</code>，适用于i &#x3D; 0到n (§5.3.4)。</p>
+</li>
+</ul>
+<p>The clause about accessibility is necessary because interface method resolution may pick a private method of interface C. (Prior to Java SE 8, the result of interface method resolution could be a non-public method of class <code>Object</code> or a static method of class <code>Object</code>; such results were not consistent with the inheritance model of the Java programming language, and are disallowed in Java SE 8 and above.)</p>
+<p>关于可访问性的条款是必要的，因为接口方法解析可能会选择接口C的私有方法。（在Java SE 8之前，接口方法解析的结果可能是类<code>Object</code>的非公共方法或类<code>Object</code>的静态方法；这些结果与Java编程语言的继承模型不一致，在Java SE 8及以上版本中是不允许的。）</p>
+<h4 id="5-4-3-5-Method-Type-and-Method-Handle-Resolution"><a href="#5-4-3-5-Method-Type-and-Method-Handle-Resolution" class="headerlink" title="5.4.3.5 Method Type and Method Handle Resolution"></a>5.4.3.5 Method Type and Method Handle Resolution</h4><p>To resolve an unresolved symbolic reference to a method type, it is as if resolution occurs of unresolved symbolic references to classes and interfaces (§5.4.3.1) whose names correspond to the types given in the method descriptor (§4.3.3).</p>
+<p>要解析对方法类型的未解析符号引用，仿佛解析了与方法描述符 (§4.3.3) 中给出的类型对应的类和接口的未解析符号引用 (§5.4.3.1)。</p>
+<p>Any exception that can be thrown as a result of failure of resolution of a class reference can thus be thrown as a result of failure of method type resolution.</p>
+<p>因此，由于类引用解析失败而可能抛出的任何异常也可能由于方法类型解析失败而抛出。</p>
+<p>The result of successful method type resolution is a reference to an instance of <code>java.lang.invoke.MethodType</code> which represents the method descriptor.</p>
+<p>成功的解析方法类型的结果是对<code>java.lang.invoke.MethodType</code>实例的引用，该实例表示方法描述符。</p>
+<p>Method type resolution occurs regardless of whether the runtime constant pool actually contains symbolic references to classes and interfaces indicated in the method descriptor. Also, the resolution is deemed to occur on unresolved symbolic references, so a failure to resolve one method type will not necessarily lead to a later failure to resolve another method type with the same textual method descriptor, if suitable classes and interfaces can be loaded by the later time.</p>
+<p>无论运行时常量池是否实际包含方法描述符中指示的类和接口的符号引用，方法类型解析都会发生。此外，解析被认为发生在未解析的符号引用上，因此解析一种方法类型的失败不会必然导致稍后解析具有相同文本方法描述符的另一种方法类型失败，如果稍后可以加载适当的类和接口。</p>
+<p>Resolution of an unresolved symbolic reference to a method handle is more complicated. Each method handle resolved by the Java Virtual Machine has an equivalent instruction sequence called its bytecode behavior, indicated by the method handle’s kind. The integer values and descriptions of the nine kinds of method handle are given in Table 5.4.3.5-A.</p>
+<p>解析方法句柄的未解析符号引用更加复杂。由Java虚拟机解析的每个方法句柄都有一个等效的指令序列，称为其字节码行为，由方法句柄的种类指示。九种方法句柄的整数值和描述见表5.4.3.5-A。</p>
+<p>Symbolic references by an instruction sequence to fields or methods are indicated by <code>C.x:T</code>, where x and T are the name and descriptor (§4.3.2, §4.3.3) of the field or method, and C is the class or interface in which the field or method is to be found.</p>
+<p>指令序列对字段或方法的符号引用由 <code>C.x:T</code> 表示，其中x和T是字段或方法的名称和描述符 (§4.3.2, §4.3.3)，C是要找到字段或方法的类或接口。</p>
+<p><strong>Table 5.4.3.5-A. Bytecode Behaviors for Method Handles</strong></p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Description</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>REF_getField</code></td>
+<td><code>getfield C.f:T</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>REF_getStatic</code></td>
+<td><code>getstatic C.f:T</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>REF_putField</code></td>
+<td><code>putfield C.f:T</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>REF_putStatic</code></td>
+<td><code>putstatic C.f:T</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>REF_invokeVirtual</code></td>
+<td><code>invokevirtual C.m:(A*)T</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>REF_invokeStatic</code></td>
+<td><code>invokestatic C.m:(A*)T</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>REF_invokeSpecial</code></td>
+<td><code>invokespecial C.m:(A*)T</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>REF_newInvokeSpecial</code></td>
+<td><code>new C; dup; invokespecial C.&lt;init&gt;:(A*)V</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>REF_invokeInterface</code></td>
+<td><code>invokeinterface C.m:(A*)T</code></td>
+</tr>
+</tbody></table>
+<p>Let MH be the symbolic reference to a method handle (§5.1) being resolved. Then:</p>
+<p>设MH为正在解析的方法句柄 (§5.1) 的符号引用。那么：</p>
+<ul>
+<li><p>Let R be the symbolic reference to the field or method contained within MH. (R is derived from the <code>CONSTANT_Fieldref</code>, <code>CONSTANT_Methodref</code>, or <code>CONSTANT_InterfaceMethodref</code> structure referred to by the <code>reference_index</code> item of the <code>CONSTANT_MethodHandle</code> from which MH is derived.)</p>
+</li>
+<li><p>设R为MH中包含的字段或方法的符号引用。（R派生自<code>CONSTANT_Fieldref</code>、<code>CONSTANT_Methodref</code>或<code>CONSTANT_InterfaceMethodref</code>结构，引用由MH派生的<code>CONSTANT_MethodHandle</code>的<code>reference_index</code>项。）</p>
+</li>
+<li><p>Let T be the type of the field referenced by R, or the return type of the method referenced by R. Let A* be the sequence (perhaps empty) of parameter types of the method referenced by R.</p>
+</li>
+<li><p>设T为R引用的字段的类型，或R引用的方法的返回类型。设A*为R引用的方法的参数类型序列（可能为空）。</p>
+</li>
+<li><p>(T and A* are derived from the <code>CONSTANT_NameAndType</code> structure referred to by the <code>name_and_type_index</code> item in the <code>CONSTANT_Fieldref</code>, <code>CONSTANT_Methodref</code>, or <code>CONSTANT_InterfaceMethodref</code> structure from which R is derived.)</p>
+</li>
+<li><p>（T和A*派生自<code>CONSTANT_NameAndType</code>结构，引用由R派生的<code>CONSTANT_Fieldref</code>、<code>CONSTANT_Methodref</code>或<code>CONSTANT_InterfaceMethodref</code>结构中的<code>name_and_type_index</code>项。）</p>
+</li>
+</ul>
+<p>To resolve MH, all symbolic references to classes, interfaces, fields, and methods in MH’s bytecode behavior are resolved, using the following three steps:</p>
+<p>要解析MH，必须解析MH字节码行为中的所有符号引用，包括类、接口、字段和方法，使用以下三步：</p>
+<ol>
+<li><p>First, R is resolved.</p>
+</li>
+<li><p>首先，解析R。</p>
+</li>
+<li><p>Second, resolution occurs as if of unresolved symbolic references to classes and interfaces whose names correspond to each type in A*, and to the type T, in that order.</p>
+</li>
+<li><p>其次，解析仿佛未解析的符号引用，依次对应A*中的每种类型和类型T的类和接口的名称。</p>
+</li>
+<li><p>Third, a reference to an instance of <code>java.lang.invoke.MethodType</code> is obtained as if by resolution of an unresolved symbolic reference to a method type that contains the method descriptor specified in <strong>Table 5.4.3.5-B</strong> for the kind of MH.</p>
+</li>
+<li><p>第三，通过解析未解析的符号引用获得对<code>java.lang.invoke.MethodType</code>实例的引用，仿佛该引用包含表5.4.3.5-B中指定的与MH类型相对应的方法描述符。</p>
+</li>
+</ol>
+<p>It is as if the symbolic reference to a method handle contains a symbolic reference to the method type that the resolved method handle will eventually have. The detailed structure of the method type is obtained by inspecting <strong>Table 5.4.3.5-B</strong>.</p>
+<p>仿佛方法句柄的符号引用包含对解析后的方法句柄最终将具有的方法类型的符号引用。通过检查表5.4.3.5-B获取方法类型的详细结构。</p>
+<p><strong>Table 5.4.3.5-B. Method Descriptors for Method Handles</strong></p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Description</th>
+<th>Method descriptor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>REF_getField</code></td>
+<td><code>(C)T</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>REF_getStatic</code></td>
+<td><code>()T</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>REF_putField</code></td>
+<td><code>(C,T)V</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>REF_putStatic</code></td>
+<td><code>(T)V</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>REF_invokeVirtual</code></td>
+<td><code>(C,A*)T</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>REF_invokeStatic</code></td>
+<td><code>(A*)T</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>REF_invokeSpecial</code></td>
+<td><code>(C,A*)T</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>REF_newInvokeSpecial</code></td>
+<td><code>(A*)C</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>REF_invokeInterface</code></td>
+<td><code>(C,A*)T</code></td>
+</tr>
+</tbody></table>
+<p>In each step, any exception that can be thrown as a result of failure of resolution of a class or interface or field or method reference can be thrown as a result of failure of method handle resolution.</p>
+<p>在每一步中，由于类、接口、字段或方法引用解析失败而可能抛出的任何异常也可能由于方法句柄解析失败而抛出。</p>
+<p>The intent is that resolving a method handle can be done in exactly the same circumstances that the Java Virtual Machine would successfully resolve the symbolic references in the bytecode behavior. In particular, method handles to private and protected members can be created in exactly those classes for which the corresponding normal accesses are legal.</p>
+<p>目的是，在Java虚拟机成功解析字节码行为中的符号引用的情况下，可以在完全相同的情况下解析方法句柄。特别是，可以在对相应的正常访问合法的类中创建对私有和受保护成员的方法句柄。</p>
+<h4 id="5-4-3-6-Call-Site-Specifier-Resolution"><a href="#5-4-3-6-Call-Site-Specifier-Resolution" class="headerlink" title="5.4.3.6 Call Site Specifier Resolution"></a>5.4.3.6 Call Site Specifier Resolution</h4><p>To resolve an unresolved symbolic reference to a call site specifier involves three steps:</p>
+<p>解析对调用站点说明符的未解析符号引用涉及三步：</p>
+<ol>
+<li><p>A call site specifier gives a symbolic reference to a method handle which is to serve as the bootstrap method for a dynamic call site (§4.7.23). The method handle is resolved to obtain a reference to an instance of <code>java.lang.invoke.MethodHandle</code> (§5.4.3.5).</p>
+</li>
+<li><p>调用站点说明符提供了一个方法句柄的符号引用，该句柄将作为动态调用站点的引导方法 (§4.7.23)。解析方法句柄以获得对<code>java.lang.invoke.MethodHandle</code>实例的引用 (§5.4.3.5)。</p>
+</li>
+<li><p>A call site specifier gives a method descriptor, <code>TD</code>. A reference to an instance of <code>java.lang.invoke.MethodType</code> is obtained as if by resolution of a symbolic reference to a method type with the same parameter and return types as <code>TD</code> (§5.4.3.5).</p>
+</li>
+<li><p>调用站点说明符提供了一个方法描述符<code>TD</code>。解析一个符号引用，以仿佛解析具有与<code>TD</code>相同参数和返回类型的方法类型的符号引用，从而获得对<code>java.lang.invoke.MethodType</code>实例的引用 (§5.4.3.5)。</p>
+</li>
+<li><p>A call site specifier gives zero or more static arguments, which communicate application-specific metadata to the bootstrap method. Any static arguments which are symbolic references to classes, method handles, or method types are resolved, as if by invocation of the <code>ldc</code> instruction (§ldc), to obtain references to <code>Class</code> objects, <code>java.lang.invoke.MethodHandle</code> objects, and <code>java.lang.invoke.MethodType</code> objects respectively. Any static arguments that are string literals are used to obtain references to <code>String</code> objects.</p>
+</li>
+<li><p>调用站点说明符提供了零个或多个静态参数，这些参数将应用程序特定的元数据传递给引导方法。任何作为类、方法句柄或方法类型的符号引用的静态参数都被解析，仿佛通过调用<code>ldc</code>指令 (§ldc)，分别获得对<code>Class</code>对象、<code>java.lang.invoke.MethodHandle</code>对象和<code>java.lang.invoke.MethodType</code>对象的引用。任何作为字符串字面量的静态参数都用于获得对<code>String</code>对象的引用。</p>
+</li>
+</ol>
+<p>The result of call site specifier resolution is a tuple consisting of:</p>
+<p>调用站点说明符解析的结果是一个元组，包含以下内容：</p>
+<ol>
+<li><p>The reference to an instance of <code>java.lang.invoke.MethodHandle</code>,</p>
+</li>
+<li><p>对<code>java.lang.invoke.MethodHandle</code>实例的引用，</p>
+</li>
+<li><p>The reference to an instance of <code>java.lang.invoke.MethodType</code>,</p>
+</li>
+<li><p>对<code>java.lang.invoke.MethodType</code>实例的引用，</p>
+</li>
+<li><p>The references to instances of <code>Class</code>, <code>java.lang.invoke.MethodHandle</code>, <code>java.lang.invoke.MethodType</code>, and <code>String</code>.</p>
+</li>
+<li><p>对<code>Class</code>、<code>java.lang.invoke.MethodHandle</code>、<code>java.lang.invoke.MethodType</code>和<code>String</code>实例的引用。</p>
+</li>
+</ol>
+<p>During resolution of the symbolic reference to the method handle in the call site specifier, or resolution of the symbolic reference to the method type for the method descriptor in the call site specifier, or resolution of a symbolic reference to any static argument, any of the exceptions pertaining to method type or method handle resolution may be thrown (§5.4.3.5).</p>
+<p>在解析对调用站点说明符中方法句柄的符号引用期间，或解析对调用站点说明符中方法描述符的方法类型的符号引用期间，或解析对任何静态参数的符号引用期间，可能会抛出与方法类型或方法句柄解析相关的任何异常 (§5.4.3.5)。</p>
+<h3 id="5-4-4-Access-Control"><a href="#5-4-4-Access-Control" class="headerlink" title="5.4.4 Access Control"></a>5.4.4 Access Control</h3><p>A class or interface C is accessible to a class or interface D if and only if either of the following is true:</p>
+<p>类或接口C对类或接口D是可访问的，当且仅当以下条件之一为真：</p>
+<ol>
+<li><p>C is public.</p>
+</li>
+<li><p>C是公共的。</p>
+</li>
+<li><p>C and D are members of the same runtime package (§5.3).</p>
+</li>
+<li><p>C和D属于同一个运行时包 (§5.3)。</p>
+</li>
+</ol>
+<p>A field or method R is accessible to a class or interface D if and only if any of the following is true:</p>
+<p>字段或方法R对类或接口D是可访问的，当且仅当以下条件之一为真：</p>
+<ol>
+<li><p>R is public.</p>
+</li>
+<li><p>R是公共的。</p>
+</li>
+<li><p>R is protected and is declared in a class C, and D is either a subclass of C or C itself. Furthermore, if R is not static, then the symbolic reference to R must contain a symbolic reference to a class T, such that T is either a subclass of D, a superclass of D, or D itself.</p>
+</li>
+<li><p>R是受保护的，并且声明在类C中，并且D要么是C的子类，要么是C本身。此外，如果R不是静态的，则R的符号引用必须包含对类T的符号引用，T要么是D的子类，要么是D的超类，要么是D本身。</p>
+</li>
+<li><p>R is either protected or has default access (that is, neither public nor protected nor private), and is declared by a class in the same runtime package as D.</p>
+</li>
+<li><p>R是受保护的，或者具有默认访问权限（即，既不是公共的，也不是受保护的，也不是私有的），并且由与D在同一个运行时包中的类声明。</p>
+</li>
+<li><p>R is private and is declared in D.</p>
+</li>
+<li><p>R是私有的，并且在D中声明。</p>
+</li>
+</ol>
+<p>This discussion of access control omits a related restriction on the target of a protected field access or method invocation (the target must be of class D or a subtype of D). That requirement is checked as part of the verification process (§4.10.1.8); it is not part of link-time access control.</p>
+<p>对于受保护字段访问或方法调用的目标，这一访问控制的讨论省略了相关的限制（目标必须是D类或D的子类型）。该要求作为验证过程的一部分进行检查 (§4.10.1.8)；它不是链接时访问控制的一部分。</p>
+<h3 id="5-4-5-Overriding"><a href="#5-4-5-Overriding" class="headerlink" title="5.4.5 Overriding"></a>5.4.5 Overriding</h3><p>An instance method m declared in class C overrides another instance method m_CA declared in class A if and only if either m_C is the same as m_CA, or all of the following are true:</p>
+<p>类C中声明的实例方法m_C覆盖类A中声明的另一个实例方法m_CA，当且仅当m_C与m_CA相同，或者以下所有条件为真：</p>
+<ol>
+<li><p>C is a subclass of A.</p>
+</li>
+<li><p>C是A的子类。</p>
+</li>
+<li><p>m_C has the same name and descriptor as m_CA.</p>
+</li>
+<li><p>m_C与m_CA具有相同的名称和描述符。</p>
+</li>
+<li><p>m_C is not marked <code>ACC_PRIVATE</code>.</p>
+</li>
+<li><p>m_C未标记为<code>ACC_PRIVATE</code>。</p>
+</li>
+<li><p>One of the following is true:</p>
+</li>
+<li><p>以下之一为真：</p>
+</li>
+</ol>
+<ul>
+<li><p>m_CA is marked <code>ACC_PUBLIC</code>; or is marked <code>ACC_PROTECTED</code>; or is marked neither <code>ACC_PUBLIC</code> nor <code>ACC_PROTECTED</code> nor <code>ACC_PRIVATE</code> and A belongs to the same runtime package as C.</p>
+</li>
+<li><p>m_CA标记为<code>ACC_PUBLIC</code>；或者标记为<code>ACC_PROTECTED</code>；或者未标记为<code>ACC_PUBLIC</code>、<code>ACC_PROTECTED</code>或<code>ACC_PRIVATE</code>，并且A与C属于同一运行时包。</p>
+</li>
+<li><p>m_C overrides a method m’_CA (m’_CA distinct from m_C and m_CA) such that m’_CA overrides m_CA.</p>
+</li>
+<li><p>m_C覆盖了方法m’_CA（m’_CA不同于m_C和m_CA），使得m’_CA覆盖m_CA。</p>
+</li>
+</ul>
+<hr>
+<h2 id="5-5-Initialization"><a href="#5-5-Initialization" class="headerlink" title="5.5 Initialization"></a>5.5 Initialization</h2><p>Initialization of a class or interface consists of executing its class or interface initialization method (§2.9).</p>
+<p>类或接口的初始化包括执行其类或接口初始化方法 (§2.9)。</p>
+<p>A class or interface C may be initialized only as a result of:</p>
+<p>类或接口C只能作为以下结果之一进行初始化：</p>
+<ol>
+<li><p>The execution of any one of the Java Virtual Machine instructions <code>new</code>, <code>getstatic</code>, <code>putstatic</code>, or <code>invokestatic</code> that references C (§new, §getstatic, §putstatic, §invokestatic). These instructions reference a class or interface directly or indirectly through either a field reference or a method reference.</p>
+</li>
+<li><p>执行引用C的任何一个Java虚拟机指令<code>new</code>、<code>getstatic</code>、<code>putstatic</code>或<code>invokestatic</code>（§new、§getstatic、§putstatic、§invokestatic）。这些指令通过字段引用或方法引用直接或间接地引用类或接口。</p>
+</li>
+</ol>
+<ul>
+<li><p>Upon execution of a <code>new</code> instruction, the referenced class is initialized if it has not been initialized already.</p>
+</li>
+<li><p>执行<code>new</code>指令时，如果引用的类尚未初始化，则初始化它。</p>
+</li>
+<li><p>Upon execution of a <code>getstatic</code>, <code>putstatic</code>, or <code>invokestatic</code> instruction, the class or interface that declared the resolved field or method is initialized if it has not been initialized already.</p>
+</li>
+<li><p>执行<code>getstatic</code>、<code>putstatic</code>或<code>invokestatic</code>指令时，如果声明了解析字段或方法的类或接口尚未初始化，则初始化它。</p>
+</li>
+</ul>
+<ol start="2">
+<li><p>The first invocation of a <code>java.lang.invoke.MethodHandle</code> instance which was the result of method handle resolution (§5.4.3.5) for a method handle of kind 2 (<code>REF_getStatic</code>), 4 (<code>REF_putStatic</code>), 6 (<code>REF_invokeStatic</code>), or 8 (<code>REF_newInvokeSpecial</code>).</p>
+</li>
+<li><p>第一次调用<code>java.lang.invoke.MethodHandle</code>实例，该实例是方法句柄解析的结果 (§5.4.3.5)，用于类型2 (<code>REF_getStatic</code>)、4 (<code>REF_putStatic</code>)、6 (<code>REF_invokeStatic</code>) 或8 (<code>REF_newInvokeSpecial</code>) 的方法句柄。</p>
+</li>
+</ol>
+<ul>
+<li><p>This implies that the class of a bootstrap method is initialized when the bootstrap method is invoked for an <code>invokedynamic</code> instruction (§invokedynamic), as part of the continuing resolution of the call site specifier.</p>
+</li>
+<li><p>这意味着当引导方法为<code>invokedynamic</code>指令 (§invokedynamic) 调用时，引导方法的类会初始化，作为继续解析调用站点说明符的一部分。</p>
+</li>
+</ul>
+<ol start="3">
+<li><p>Invocation of certain reflective methods in the class library (§2.12), for example, in class <code>Class</code> or in package <code>java.lang.reflect</code>.</p>
+</li>
+<li><p>调用类库中的某些反射方法 (§2.12)，例如在<code>Class</code>类中或在<code>java.lang.reflect</code>包中。</p>
+</li>
+<li><p>If C is a class, the initialization of one of its subclasses.</p>
+</li>
+<li><p>如果C是一个类，则初始化其子类之一。</p>
+</li>
+<li><p>If C is an interface that declares a non-abstract, non-static method, the initialization of a class that implements C directly or indirectly.</p>
+</li>
+<li><p>如果C是声明了非抽象、非静态方法的接口，则初始化直接或间接实现C的类。</p>
+</li>
+<li><p>If C is a class, its designation as the initial class at Java Virtual Machine startup (§5.2).</p>
+</li>
+<li><p>如果C是一个类，则在Java虚拟机启动时指定为初始类 (§5.2)。</p>
+</li>
+</ol>
+<p>Prior to initialization, a class or interface must be linked, that is, verified, prepared, and optionally resolved.</p>
+<p>在初始化之前，类或接口必须链接，即验证、准备，并可选地解析。</p>
+<p>Because the Java Virtual Machine is multithreaded, initialization of a class or interface requires careful synchronization, since some other thread may be trying to initialize the same class or interface at the same time. There is also the possibility that initialization of a class or interface may be requested recursively as part of the initialization of that class or interface. The implementation of the Java Virtual Machine is responsible for taking care of synchronization and recursive initialization by using the following procedure. It assumes that the <code>Class</code> object has already been verified and prepared, and that the <code>Class</code> object contains state that indicates one of four situations:</p>
+<p>由于Java虚拟机是多线程的，因此类或接口的初始化需要仔细同步，因为其他线程可能会尝试同时初始化相同的类或接口。也有可能作为类或接口初始化的一部分递归地请求类或接口的初始化。Java虚拟机的实现负责通过使用以下过程处理同步和递归初始化。假定<code>Class</code>对象已经过验证和准备，并且<code>Class</code>对象包含指示以下四种情况之一的状态：</p>
+<ol>
+<li><p>This <code>Class</code> object is verified and prepared but not initialized.</p>
+</li>
+<li><p>该<code>Class</code>对象已验证和准备，但尚未初始化。</p>
+</li>
+<li><p>This <code>Class</code> object is being initialized by some particular thread.</p>
+</li>
+<li><p>该<code>Class</code>对象正在由某个特定线程初始化。</p>
+</li>
+<li><p>This <code>Class</code> object is fully initialized and ready for use.</p>
+</li>
+<li><p>该<code>Class</code>对象已完全初始化并可供使用。</p>
+</li>
+<li><p>This <code>Class</code> object is in an erroneous state, perhaps because initialization was attempted and failed.</p>
+</li>
+<li><p>该<code>Class</code>对象处于错误状态，可能是因为初始化尝试失败。</p>
+</li>
+</ol>
+<p>For each class or interface C, there is a unique initialization lock <code>LC</code>. The mapping from C to <code>LC</code> is left to the discretion of the Java Virtual Machine implementation. For example, <code>LC</code> could be the <code>Class</code> object for C, or the monitor associated with that <code>Class</code> object. The procedure for initializing C is then as follows:</p>
+<p>对于每个类或接口C，存在一个唯一的初始化锁<code>LC</code>。从C到<code>LC</code>的映射由Java虚拟机实现自行决定。例如，<code>LC</code>可以是C的<code>Class</code>对象，也可以是与该<code>Class</code>对象相关联的监视器。初始化C的过程如下：</p>
+<ol>
+<li><p>Synchronize on the initialization lock, <code>LC</code>, for C. This involves waiting until the current thread can acquire <code>LC</code>.</p>
+</li>
+<li><p>在C的初始化锁<code>LC</code>上进行同步。这涉及等待当前线程可以获取<code>LC</code>。</p>
+</li>
+<li><p>If the <code>Class</code> object for C indicates that initialization is in progress for C by some other thread, then release <code>LC</code> and block the current thread until informed that the in-progress initialization has completed, at which time repeat this procedure.</p>
+</li>
+<li><p>如果C的<code>Class</code>对象指示其他线程正在进行C的初始化，则释放<code>LC</code>并阻塞当前线程，直到通知初始化已完成为止，此时重复此过程。</p>
+</li>
+</ol>
+<ul>
+<li><p>Thread interrupt status is unaffected by execution of the initialization procedure.</p>
+</li>
+<li><p>初始化过程的执行不会影响线程中断状态。</p>
+</li>
+</ul>
+<ol start="3">
+<li><p>If the <code>Class</code> object for C indicates that initialization is in progress for C by the current thread, then this must be a recursive request for initialization. Release <code>LC</code> and complete normally.</p>
+</li>
+<li><p>如果C的<code>Class</code>对象指示当前线程正在进行C的初始化，则这必须是递归初始化请求。释放<code>LC</code>并正常完成。</p>
+</li>
+<li><p>If the <code>Class</code> object for C indicates that C has already been initialized, then no further action is required. Release <code>LC</code> and complete normally.</p>
+</li>
+<li><p>如果C的<code>Class</code>对象指示C已经初始化，则不需要进一步操作。释放<code>LC</code>并正常完成。</p>
+</li>
+<li><p>If the <code>Class</code> object for C is in an erroneous state, then initialization is not possible. Release <code>LC</code> and throw a <code>NoClassDefFoundError</code>.</p>
+</li>
+<li><p>如果C的<code>Class</code>对象处于错误状态，则无法初始化。释放<code>LC</code>并抛出<code>NoClassDefFoundError</code>。</p>
+</li>
+<li><p>Otherwise, record the fact that initialization of the <code>Class</code> object for C is in progress by the current thread, and release <code>LC</code>.</p>
+</li>
+<li><p>否则，记录当前线程正在进行C的<code>Class</code>对象的初始化，并释放<code>LC</code>。</p>
+</li>
+</ol>
+<ul>
+<li><p>Then, initialize each final static field of C with the constant value in its <code>ConstantValue</code> attribute (§4.7.2), in the order the fields appear in the <code>ClassFile</code> structure.</p>
+</li>
+<li><p>然后，按字段在<code>ClassFile</code>结构中出现的顺序，用其<code>ConstantValue</code>属性中的常量值 (§4.7.2) 初始化C的每个最终静态字段。</p>
+</li>
+</ul>
+<ol start="7">
+<li><p>Next, if C is a class rather than an interface, and its superclass has not yet been initialized, then let <code>SC</code> be its superclass and let <code>SI1, ..., SIn</code> be all superinterfaces of C (whether direct or indirect) that declare at least one non-abstract, non-static method. The order of superinterfaces is given by a recursive enumeration over the superinterface hierarchy of each interface directly implemented by C. For each interface I directly implemented by C (in the order of the <code>interfaces</code> array of C), the enumeration recurs on I’s superinterfaces (in the order of the <code>interfaces</code> array of I) before returning I.</p>
+</li>
+<li><p>接下来，如果C是一个类而不是接口，并且它的超类尚未初始化，则设<code>SC</code>为其超类，设<code>SI1, ..., SIn</code>为C的所有超接口（无论是直接的还是间接的），它们声明了至少一个非抽象的非静态方法。超接口的顺序由C直接实现的每个接口的超接口层次结构的递归枚举给出。对于C直接实现的每个接口I（按C的<code>interfaces</code>数组的顺序），枚举在I的超接口上递归（按I的<code>interfaces</code>数组的顺序）然后返回I。</p>
+</li>
+</ol>
+<ul>
+<li><p>For each <code>S</code> in the list <code>[ SC, SI1, ..., SIn ]</code>, recursively perform this entire procedure for <code>S</code>. If necessary, verify and prepare <code>S</code> first.</p>
+</li>
+<li><p>对于列表 <code>[ SC, SI1, ..., SIn ]</code> 中的每个 <code>S</code>，递归地为 <code>S</code> 执行整个过程。如果必要，先验证并准备 <code>S</code>。</p>
+</li>
+<li><p>If the initialization of <code>S</code> completes abruptly because of a thrown exception, then acquire <code>LC</code>, label the <code>Class</code> object for C as erroneous, notify all waiting threads, release <code>LC</code>, and complete abruptly, throwing the same exception that resulted from initializing <code>SC</code>.</p>
+</li>
+<li><p>如果<code>S</code>的初始化由于抛出异常而突然完成，则获取<code>LC</code>，将C的<code>Class</code>对象标记为错误，通知所有等待的线程，释放<code>LC</code>并突然完成，抛出与初始化<code>SC</code>相同的异常。</p>
+</li>
+</ul>
+<ol start="8">
+<li><p>Next, determine whether assertions are enabled for C by querying its defining class loader.</p>
+</li>
+<li><p>接下来，通过查询其定义类加载器确定是否为C启用了断言。</p>
+</li>
+<li><p>Next, execute the class or interface initialization method of C.</p>
+</li>
+<li><p>接下来，执行C的类或接口初始化方法。</p>
+</li>
+<li><p>If the execution of the class or interface initialization method completes normally, then acquire <code>LC</code>, label the <code>Class</code> object for C as fully initialized, notify all waiting threads, release <code>LC</code>, and complete this procedure normally.</p>
+</li>
+<li><p>如果类或接口初始化方法的执行正常完成，则获取<code>LC</code>，将C的<code>Class</code>对象标记为完全初始化，通知所有等待的线程，释放<code>LC</code>并正常完成此过程。</p>
+</li>
+<li><p>Otherwise, the class or interface initialization method must have completed abruptly by throwing some exception <code>E</code>. If the class of <code>E</code> is not <code>Error</code> or one of its subclasses, then create a new instance of the class <code>ExceptionInInitializerError</code> with <code>E</code> as the argument, and use this object in place of <code>E</code> in the following step. If a new instance of <code>ExceptionInInitializerError</code> cannot be created because an <code>OutOfMemoryError</code> occurs, then use an <code>OutOfMemoryError</code> object in place of <code>E</code>.</p>
+</li>
+<li><p>否则，类或接口初始化方法必须通过抛出某个异常<code>E</code>突然完成。如果<code>E</code>的类不是<code>Error</code>或其子类之一，则使用<code>E</code>作为参数创建一个新的<code>ExceptionInInitializerError</code>类的实例，并在以下步骤中使用此对象代替<code>E</code>。如果由于发生<code>OutOfMemoryError</code>而无法创建<code>ExceptionInInitializerError</code>的实例，则使用<code>OutOfMemoryError</code>对象代替<code>E</code>。</p>
+</li>
+<li><p>Acquire <code>LC</code>, label the <code>Class</code> object for C as erroneous, notify all waiting threads, release <code>LC</code>, and complete this procedure abruptly with reason <code>E</code> or its replacement as determined in the previous step.</p>
+</li>
+<li><p>获取<code>LC</code>，将C的<code>Class</code>对象标记为错误，通知所有等待的线程，释放<code>LC</code>并突然完成此过程，原因是<code>E</code>或在前一步骤中确定的替换。</p>
+</li>
+</ol>
+<p>A Java Virtual Machine implementation may optimize this procedure by eliding the lock acquisition in step 1 (and release in step 4&#x2F;5) when it can determine that the initialization of the class has already completed, provided that, in terms of the Java memory model, all happens-before orderings (JLS §17.4.5) that would exist if the lock were acquired, still exist when the optimization is performed.</p>
+<p>Java虚拟机实现可以通过在步骤1中省略锁获取（在步骤4&#x2F;5中省略释放）来优化此过程，当它可以确定类的初始化已经完成时，前提是，根据Java内存模型，如果获取了锁，所有会存在的发生先于顺序（JLS §17.4.5）在优化执行时仍然存在。</p>
+<hr>
+<h2 id="5-6-Binding-Native-Method-Implementations"><a href="#5-6-Binding-Native-Method-Implementations" class="headerlink" title="5.6 Binding Native Method Implementations"></a>5.6 Binding Native Method Implementations</h2><p>Binding is the process by which a function written in a language other than the Java programming language and implementing a native method is integrated into the Java Virtual Machine so that it can be executed. Although this process is traditionally referred to as linking, the term binding is used in the specification to avoid confusion with linking of classes or interfaces by the Java Virtual Machine.</p>
+<p>绑定是指将用非Java编程语言编写并实现本地方法的函数集成到Java虚拟机中，使其可以执行的过程。尽管这个过程传统上称为链接，但在规范中使用绑定一词是为了避免与Java虚拟机对类或接口的链接混淆。</p>
+<hr>
+<h2 id="5-7-Java-Virtual-Machine-Exit"><a href="#5-7-Java-Virtual-Machine-Exit" class="headerlink" title="5.7 Java Virtual Machine Exit"></a>5.7 Java Virtual Machine Exit</h2><p>The Java Virtual Machine exits when some thread invokes the <code>exit</code> method of class <code>Runtime</code> or class <code>System</code>, or the <code>halt</code> method of class <code>Runtime</code>, and the exit or halt operation is permitted by the security manager.</p>
+<p>当某个线程调用<code>Runtime</code>类或<code>System</code>类的<code>exit</code>方法，或<code>Runtime</code>类的<code>halt</code>方法，并且安全管理器允许退出或停止操作时，Java虚拟机退出。</p>
+<p>In addition, the JNI (Java Native Interface) Specification describes termination of the Java Virtual Machine when the JNI Invocation API is used to load and unload the Java Virtual Machine.</p>
+<p>此外，JNI（Java本地接口）规范描述了在使用JNI调用API加载和卸载Java虚拟机时Java虚拟机的终止。</p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2022/09/02/jvm-spec-3.%20Compiling%20for%20the%20Java%20Virtual%20Machine/" title="jvm-spec-3. Compiling for the Java Virtual Machine"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">上一页: jvm-spec-3. Compiling for the Java Virtual Machine</span></a><a class="button is-default" href="/2022/09/01/jvm-spec-1.%20Introduction/" title="jvm-spec-1. Introduction"><span class="has-text-weight-semibold">下一页: jvm-spec-1. Introduction</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Zhangdd/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/wwinter117"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Zhangdd 2021 - 2024</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="site author" target="_blank" rel="noopener" href="//github.com/wwinter117">Hosted by Zhangdd&nbsp;</a></p><!--div(style="margin-top: 2px")--><!--  a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")--></div><div><span>浙备7837-534598</span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/jquery-3.6.1.min.js"></script><script src="/js/jquery-fancybox.min.js"></script><script src="/js/img_zoom.js"></script><script src="/js/post.js"></script></body></html>

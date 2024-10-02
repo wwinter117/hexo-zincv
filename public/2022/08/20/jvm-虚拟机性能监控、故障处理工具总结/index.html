@@ -1,0 +1,247 @@
+<!DOCTYPE html><html class="appearance-auto" lang="zh-CN"><head><meta charset="UTF-8"><title>jvm-虚拟机性能监控、故障处理工具总结</title><meta name="description" content="Let's go"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="https://zincv.oss-cn-hangzhou.aliyuncs.com/IMG_1541.jpg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><link rel="stylesheet" href="/style/common/jquery.fancybox.min.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="
+
+
+工具
+功能描述
+常用选项&amp;#x2F;命令
+
+
+
+jps
+列出所有正在运行的 JVM 进程及其启动类名或 JAR 文件名。
+-v 显示传递给 JVM 的参数-m 显示传递给主类的参数
+
+
+jstat
+监控 JVM 性能统计信息，如垃圾回收、类加载等。
+-gc 查看垃圾回收统计信息-class 查看类加载信息
+
+
+jmap
+生成堆转储文件，查看堆内存的使用情况。
+-dump 生成堆转储-heap 查看堆内存摘要-histo 显示堆直方图
+
+
+jstack
+打印线程的堆栈跟踪信息，用于诊断线程问题。
+-F 强制输出线程堆栈跟踪-l 输出附加的锁信息
+
+
+jinfo
+查看和调整正在运行的 JVM 实例的配置信息。
+-flags 查看所有 JVM 标志-sysprops 查看系统属性
+
+
+jcmd
+综合性工具，.."><meta name="generator" content="Hexo 7.3.0"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Zhangdd's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">jvm-虚拟机性能监控、故障处理工具总结</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">点击返回顶部</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">首页</a></h3><h3 class="is-inline-block"><a href="/about">关于</a></h3><h3 class="is-inline-block"><a href="/archives">归档</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#jps"><span class="toc-text">jps</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9"><span class="toc-text">常用选项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jstat"><span class="toc-text">jstat</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95-1"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9-1"><span class="toc-text">常用选项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jinfo"><span class="toc-text">jinfo</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95-2"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9-2"><span class="toc-text">常用选项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-1"><span class="toc-text">示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jmap"><span class="toc-text">jmap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95-3"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9-3"><span class="toc-text">常用选项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-2"><span class="toc-text">示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-1"><span class="toc-text">总结</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/jvm"><i class="tag post-item-tag">jvm</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">jvm-虚拟机性能监控、故障处理工具总结</h1><time class="has-text-grey" datetime="2022-08-20T14:46:49.000Z">2022-08-20</time><article class="mt-2 post-content"><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>功能描述</th>
+<th>常用选项&#x2F;命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>jps</code></td>
+<td>列出所有正在运行的 <code>JVM</code> 进程及其启动类名或 <code>JAR</code> 文件名。</td>
+<td><code>-v</code> 显示传递给 <code>JVM</code> 的参数<br><code>-m</code> 显示传递给主类的参数</td>
+</tr>
+<tr>
+<td><code>jstat</code></td>
+<td>监控 <code>JVM</code> 性能统计信息，如垃圾回收、类加载等。</td>
+<td><code>-gc</code> 查看垃圾回收统计信息<br><code>-class</code> 查看类加载信息</td>
+</tr>
+<tr>
+<td><code>jmap</code></td>
+<td>生成堆转储文件，查看堆内存的使用情况。</td>
+<td><code>-dump</code> 生成堆转储<br><code>-heap</code> 查看堆内存摘要<br><code>-histo</code> 显示堆直方图</td>
+</tr>
+<tr>
+<td><code>jstack</code></td>
+<td>打印线程的堆栈跟踪信息，用于诊断线程问题。</td>
+<td><code>-F</code> 强制输出线程堆栈跟踪<br><code>-l</code> 输出附加的锁信息</td>
+</tr>
+<tr>
+<td><code>jinfo</code></td>
+<td>查看和调整正在运行的 <code>JVM</code> 实例的配置信息。</td>
+<td><code>-flags</code> 查看所有 <code>JVM</code> 标志<br><code>-sysprops</code> 查看系统属性</td>
+</tr>
+<tr>
+<td><code>jcmd</code></td>
+<td>综合性工具，用于执行各种 <code>JVM</code> 诊断命令。</td>
+<td><code>VM.uptime</code> 查看 <code>JVM</code> 的运行时间<br><code>GC.run</code> 触发垃圾回收</td>
+</tr>
+<tr>
+<td><code>jhat</code></td>
+<td>用于分析 <code>jmap</code> 生成的堆转储文件的工具，提供一个 <code>Web</code> 界面。</td>
+<td><code>jhat &lt;heap-dump-file&gt;</code> 启动分析堆转储文件</td>
+</tr>
+<tr>
+<td><code>jdb</code></td>
+<td><code>Java</code> 调试器，用于调试 <code>Java</code> 程序。</td>
+<td><code>stop at</code> 在指定类的行设置断点<br><code>print</code> 打印变量值</td>
+</tr>
+<tr>
+<td><code>jrunscript</code></td>
+<td>运行脚本和执行命令行 <code>JavaScript</code> 程序。</td>
+<td><code>-e</code> 执行命令<br><code>-f</code> 执行脚本文件</td>
+</tr>
+<tr>
+<td><code>javap</code></td>
+<td>反编译 <code>Java</code> 类文件，显示类的字节码和结构。</td>
+<td><code>-c</code> 反汇编代码<br><code>-v</code> 显示详细的字节码信息</td>
+</tr>
+<tr>
+<td><code>jconsole</code></td>
+<td>基于 <code>GUI</code> 的工具，用于监控和管理 <code>JVM</code> 实例。</td>
+<td>启动后选择目标 <code>JVM</code> 实例并查看各项性能指标</td>
+</tr>
+<tr>
+<td><code>jvisualvm</code></td>
+<td>综合性的 <code>GUI</code> 工具，用于分析、监控、故障排除和配置 <code>JVM</code> 应用。</td>
+<td>启动后选择目标 <code>JVM</code> 实例并分析内存、<code>CPU</code> 使用情况等</td>
+</tr>
+<tr>
+<td><code>jstatd</code></td>
+<td>远程监控工具，用于提供 <code>jstat</code> 远程访问的支持。</td>
+<td>启动守护进程以允许远程 <code>JVM</code> 监控</td>
+</tr>
+<tr>
+<td><code>hs_err_pid</code></td>
+<td><code>JVM</code> 崩溃时自动生成的错误日志文件。</td>
+<td>分析文件中的堆栈跟踪和 <code>JVM</code> 错误信息</td>
+</tr>
+<tr>
+<td><code>jhsdb</code></td>
+<td>诊断和分析工具，用于分析 <code>JVM</code> 进程的堆、线程等信息。</td>
+<td><code>jhsdb jmap</code> 查看堆信息或生成堆转储<br><code>jhsdb jstack</code> 查看线程堆栈</td>
+</tr>
+</tbody></table>
+<h2 id="jps"><a href="#jps" class="headerlink" title="jps"></a>jps</h2><p><code>jps</code>  是一个用于列出当前所有运行中的 Java 虚拟机进程的命令行工具。它可以显示每个 <code>JVM</code> 实例的进程 <code>ID</code> (<code>PID</code>) 及其启动类或 <code>JAR</code> 文件名称，适用于快速获取 <code>JVM</code> 进程的 <code>PID</code>，以便与其他 <code>JVM</code> 工具（如  <code>jstat</code>,  <code>jstack</code>  等）结合使用。</p>
+<h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><pre><code class="hljs bash">jps [options] [<span class="hljs-built_in">hostid</span>]</code></pre>
+
+<ul>
+<li><code>[options]</code>:  <code>jps</code>  的选项，可以指定显示的内容。</li>
+<li><code>[hostid]</code>: 可选参数，指定远程主机的标识符。如果未指定，则默认为本地主机。</li>
+</ul>
+<h3 id="常用选项"><a href="#常用选项" class="headerlink" title="常用选项"></a>常用选项</h3><ul>
+<li><code>-q</code>  : 只输出 Java 进程的 PID，不显示类名、JAR 文件名等信息。</li>
+<li><code>-m</code>  : 显示传递给主类的参数或传递给 JAR 文件的参数。</li>
+<li><code>-l</code>  : 输出主类的全限定名或 JAR 文件的完整路径。</li>
+<li><code>-v</code>  : 输出传递给 JVM 的参数。</li>
+</ul>
+<h2 id="jstat"><a href="#jstat" class="headerlink" title="jstat"></a>jstat</h2><p><code>jstat</code>  是一个用于监控 <code>JVM</code> 性能统计的命令行工具，它可以提供堆内存使用情况、垃圾收集信息、类加载统计等信息。以下是  <code>jstat</code>  的基本用法和常用选项说明：</p>
+<h3 id="基本用法-1"><a href="#基本用法-1" class="headerlink" title="基本用法"></a>基本用法</h3><p><code>jstat -&lt;option&gt; [-t] [-h&lt;lines&gt;] &lt;vmid&gt; [&lt;interval&gt; [&lt;count&gt;]]</code></p>
+<ul>
+<li><code>&lt;option&gt;</code>: 选择想要查看的统计信息类型，具体的选项可以通过  <code>jstat -options</code>  查看。</li>
+<li><code>&lt;vmid&gt;</code>: <code>JVM</code> 实例的标识符，通常是 <code>JVM</code> 进程的 <code>PID</code>，也可以是  <code>&lt;lvmid&gt;@&lt;hostname&gt;[:&lt;port&gt;]</code>  的形式。</li>
+<li><code>&lt;interval&gt;</code>: 采样间隔时间，可以指定单位为毫秒 (<code>ms</code>) 或秒 (<code>s</code>)，如果不指定单位，默认单位是毫秒。</li>
+<li><code>&lt;count&gt;</code>: 采样次数，指定后程序在采样指定次数后自动终止。</li>
+</ul>
+<h3 id="常用选项-1"><a href="#常用选项-1" class="headerlink" title="常用选项"></a>常用选项</h3><ul>
+<li><code>-gc</code>: 显示与垃圾回收相关的统计信息，包括年轻代、老年代、永久代的内存使用情况以及 <code>GC</code> 次数和时间。</li>
+<li><code>-gccapacity</code>: 显示各代内存区域的使用和分配情况。</li>
+<li><code>-gcutil</code>: 显示每一代内存区域的利用率以及 <code>GC</code> 的次数和时间。</li>
+<li><code>-class</code>: 显示类加载的统计信息，包括已加载类、已卸载类的数量等。</li>
+<li><code>-compiler</code>: 显示 <code>JIT</code> 编译器的统计信息。</li>
+<li><code>-printcompilation</code>: 显示已经编译的最近方法的相关信息。</li>
+</ul>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><ol>
+<li><p>查看 <code>PID</code> 为 <code>12345</code> 的 <code>JVM</code> 的垃圾回收情况，每 <code>1</code> 秒采样一次，共采样 <code>10</code>次：</p>
+<p> <code>jstat -gc 12345 1000 10</code></p>
+</li>
+<li><p>查看 <code>JVM</code> 进程的类加载情况：</p>
+<p> <code>jstat -class 12345</code></p>
+</li>
+<li><p>查看 <code>PID</code> 为 <code>12345</code> 的 <code>JVM</code> 的堆内存使用情况，采样间隔为 <code>2</code> 秒，直到手动终止：</p>
+<p> <code>jstat -gcutil 12345 2000</code></p>
+</li>
+</ol>
+<p>通过  <code>jstat</code>，可以对 <code>Java</code> 应用的运行状况进行实时监控和诊断，特别是在调优 <code>JVM</code> 参数时，这个工具非常有用。</p>
+<h2 id="jinfo"><a href="#jinfo" class="headerlink" title="jinfo"></a>jinfo</h2><p><code>jinfo</code>  是一个用于查看和修改运行中 <code>Java</code> 虚拟机（<code>JVM</code>）进程配置的命令行工具。它可以用于查询 <code>JVM</code> 的启动参数、系统属性以及动态调整 <code>JVM</code> 的某些配置。</p>
+<h3 id="基本用法-2"><a href="#基本用法-2" class="headerlink" title="基本用法"></a>基本用法</h3><p><code>jinfo &lt;option&gt; &lt;pid&gt;</code></p>
+<ul>
+<li><code>&lt;option&gt;</code>: 要执行的操作选项，用于指定查询或设置的内容。</li>
+<li><code>&lt;pid&gt;</code>: 目标 <code>JVM</code> 进程的 <code>PID</code>，用于指定要操作的 <code>JVM</code> 进程。</li>
+</ul>
+<h3 id="常用选项-2"><a href="#常用选项-2" class="headerlink" title="常用选项"></a>常用选项</h3><ul>
+<li><code>-flag &lt;name&gt;</code>: 输出指定 <code>JVM</code> 标志（<code>flag</code>）的值。</li>
+<li><code>-flag [+|-]&lt;name&gt;</code>: 启用或禁用指定的 <code>JVM</code> 标志。</li>
+<li><code>-flag &lt;name&gt;=&lt;value&gt;</code>: 将指定的 <code>JVM</code> 标志设置为给定的值。</li>
+<li><code>-flags</code>: 输出当前 <code>JVM</code> 进程的所有 <code>JVM</code> 标志及其值。</li>
+<li><code>-sysprops</code>: 输出当前 <code>JVM</code> 进程的所有系统属性（<code>System Properties</code>）。</li>
+<li><code>&lt;no option&gt;</code>: 如果不指定任何选项，则输出 <code>JVM</code> 的所有标志和系统属性。</li>
+<li><code>-? | -h | --help | -help</code>: 输出帮助信息。</li>
+</ul>
+<h3 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h3><ol>
+<li><p><strong>查看 JVM 标志的值</strong>:</p>
+<p> <code>jinfo -flag MaxHeapSize 12345</code></p>
+<p> 这将输出 PID 为  <code>12345</code>  的 <code>JVM</code> 进程中  <code>MaxHeapSize</code>  标志的值。</p>
+</li>
+<li><p><strong>启用或禁用 JVM 标志</strong>:</p>
+<p> <code>jinfo -flag +PrintGC 12345</code></p>
+<p> 这将启用 <code>PID</code> 为  <code>12345</code>  的 <code>JVM</code> 进程的  <code>PrintGC</code>  标志。</p>
+</li>
+<li><p><strong>设置 JVM 标志的值</strong>:</p>
+<p> <code>jinfo -flag MaxHeapSize=1073741824 12345</code></p>
+<p> 这将把 <code>PID</code> 为  <code>12345</code>  的 <code>JVM</code> 进程的  <code>MaxHeapSize</code>  标志设置为 <code>1</code> GB（<code>1073741824</code> 字节）。</p>
+</li>
+<li><p><strong>查看所有 JVM 标志</strong>:</p>
+<p> <code>jinfo -flags 12345</code></p>
+<p> 这将输出 <code>PID</code> 为  <code>12345</code>  的 <code>JVM</code> 进程的所有 <code>JVM</code> 标志及其当前值。</p>
+</li>
+<li><p><strong>查看所有系统属性</strong>:</p>
+<p> <code>jinfo -sysprops 12345</code></p>
+<p> 这将输出 <code>PID</code> 为  <code>12345</code>  的 <code>JVM</code> 进程的所有系统属性。</p>
+</li>
+<li><p><strong>查看 JVM 标志和系统属性</strong>:</p>
+<p> <code>jinfo 12345</code></p>
+<p> 如果不带任何选项，<code>jinfo</code>  会输出指定 <code>JVM</code> 进程的所有 <code>JVM</code> 标志和系统属性。</p>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><code>jinfo</code>  是一个非常有用的工具，特别是在需要诊断运行中的 <code>JVM</code> 进程问题时，可以让你动态地查看和调整 <code>JVM</code> 配置，而无需重启应用程序。</p>
+<h2 id="jmap"><a href="#jmap" class="headerlink" title="jmap"></a>jmap</h2><p><code>jmap</code>  是一个用于生成堆转储（<code>heap dump</code>）以及获取 <code>Java</code> 堆内存使用情况的命令行工具。它可以帮助分析 <code>JVM</code> 中对象的分配情况，了解内存使用的分布，并识别内存泄漏问题。</p>
+<p>（<code>JDK 9</code> 及更高版本中用于替代  <code>jmap</code>  某些功能的新工具，可以使用  <code>jhsdb</code>  工具）</p>
+<h3 id="基本用法-3"><a href="#基本用法-3" class="headerlink" title="基本用法"></a>基本用法</h3><p><code>jmap [option] &lt;pid&gt;</code></p>
+<ul>
+<li><code>&lt;option&gt;</code>: 执行的操作选项，用于指定要获取的内存信息或生成的转储类型。</li>
+<li><code>&lt;pid&gt;</code>: 目标 <code>JVM</code> 进程的 <code>PID</code>（进程 <code>ID</code>），用于指定要操作的 <code>JVM</code> 进程。</li>
+</ul>
+<h3 id="常用选项-3"><a href="#常用选项-3" class="headerlink" title="常用选项"></a>常用选项</h3><ul>
+<li><code>-dump:[live,]format=b,file=&lt;filename&gt;</code>: 生成堆转储文件，<code>live</code>  表示只转储存活的对象（可选），<code>format=b</code>  表示二进制格式，<code>file=&lt;filename&gt;</code>  指定转储文件的路径和名称。</li>
+<li><code>-heap</code>: 显示堆的概要信息，包括使用的堆存储管理器和堆配置。</li>
+<li><code>-histo[:live]</code>: 显示堆中对象的直方图，包括类的实例数和占用空间。如果使用  <code>live</code>  选项，则只显示存活的对象。</li>
+<li><code>-finalizerinfo</code>: 显示正在等待终结的对象（即  <code>finalize()</code>  尚未执行的对象）。</li>
+<li><code>-clstats</code>: 显示类加载器的统计信息。</li>
+<li><code>-F</code>: 强制操作，当 <code>JVM</code> 不响应时（例如挂起状态），可以使用这个选项强制生成堆转储或获取内存信息。</li>
+<li><code>-J&lt;flag&gt;</code>: 将  <code>&lt;flag&gt;</code>  直接传递给 <code>JVM</code>（与其他工具相同的选项）。</li>
+</ul>
+<h3 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h3><ol>
+<li><p><strong>生成堆转储文件</strong>:</p>
+<p> <code>jmap -dump:format=b,file=heapdump.hprof 12345</code></p>
+<p> 这将在当前目录下生成名为  <code>heapdump.hprof</code>  的堆转储文件，适用于分析内存泄漏或内存使用情况。</p>
+</li>
+<li><p><strong>只转储存活对象</strong>:</p>
+<p> <code>jmap -dump:live,format=b,file=heapdump_live.hprof 12345</code></p>
+<p> 这将生成一个仅包含存活对象的堆转储文件。</p>
+</li>
+<li><p><strong>查看堆的概要信息</strong>:</p>
+<p> <code>jmap -heap 12345</code></p>
+<p> 这将显示 <code>JVM</code> 堆的概要信息，包括堆的配置和使用情况。</p>
+</li>
+<li><p><strong>显示堆中对象的直方图</strong>:</p>
+<p> <code>jmap -histo 12345</code></p>
+<p> 这将显示所有对象的直方图，包括每个类的实例数量和总占用空间。</p>
+</li>
+<li><p><strong>显示仅存活对象的直方图</strong>:</p>
+<p> <code>jmap -histo:live 12345</code></p>
+<p> 这将显示堆中仅存活对象的直方图。</p>
+</li>
+<li><p><strong>显示正在等待终结的对象</strong>:</p>
+<p> <code>jmap -finalizerinfo 12345</code></p>
+<p> 这将列出 <code>JVM</code> 中正在等待执行  <code>finalize()</code>  方法的对象。</p>
+</li>
+</ol>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p><code>jmap</code>  是 <code>JVM</code> 诊断和内存分析的重要工具，尤其在分析内存泄漏、内存分配模式和优化内存使用时非常有用。它可以帮助生成堆转储，查看内存使用情况，并获取 <code>JVM</code> 的详细内存统计信息，从而深入了解 <code>Java</code> 应用的内存表现。</p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2022/09/01/jvm-spec-2.%20The%20Structure%20of%20the%20Java%20Virtual%20Machine/" title="jvm-spec-2. The Structure of the Java Virtual Machine"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">上一页: jvm-spec-2. The Structure of the Java Virtual Machine</span></a><a class="button is-default" href="/2022/08/12/jvm-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80/" title="jvm-对象的内存布局"><span class="has-text-weight-semibold">下一页: jvm-对象的内存布局</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Zhangdd/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/wwinter117"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Zhangdd 2021 - 2024</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="site author" target="_blank" rel="noopener" href="//github.com/wwinter117">Hosted by Zhangdd&nbsp;</a></p><!--div(style="margin-top: 2px")--><!--  a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")--></div><div><span>浙备7837-534598</span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/jquery-3.6.1.min.js"></script><script src="/js/jquery-fancybox.min.js"></script><script src="/js/img_zoom.js"></script><script src="/js/post.js"></script></body></html>
