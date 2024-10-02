@@ -3,6 +3,7 @@ title: 在 M1 Pro 芯片的 macOS 上编译 JDK 17
 tags:
   - jdk
   - macos
+date: 2023-12-26 22:46:49
 ---
 
 ![jdk17u](https://zincv.oss-cn-hangzhou.aliyuncs.com/Snipaste_2024-10-01_16-33-12.png)
