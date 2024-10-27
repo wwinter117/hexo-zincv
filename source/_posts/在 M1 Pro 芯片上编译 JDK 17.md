@@ -101,9 +101,6 @@ git clone https://github.com/openjdk/jdk17u.git
 
 ```
 sh configure --with-boot-jdk=/Library/Java/JavaVirtualMachines/adoptopenjdk-16.jdk/Contents/Home/ --with-xcode-path=/Users/zhangdongdong/Downloads/Xcode.app
-
-sh configure --with-boot-jdk=/Library/Java/JavaVirtualMachines/adoptopenjdk-16.jdk/Contents/Home/ --with-xcode-path=/Applications/Xcode.app
-
 ```
 
 其中

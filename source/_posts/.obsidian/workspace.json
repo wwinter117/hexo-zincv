@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "redis集群实验.md",
+                "file": "基于riscv的小型操作系统.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "redis集群实验.md",
+                "file": "基于riscv的小型操作系统.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "redis集群实验.md",
+                "file": "基于riscv的小型操作系统.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "redis集群实验.md"
+                "file": "基于riscv的小型操作系统.md"
               }
             }
           }
@@ -148,9 +148,14 @@
   },
   "active": "2b1788597bfa77db",
   "lastOpenFiles": [
+    "redis集群实验.md",
     "redis持久化总结.md",
     "oom异常实例.md",
+    "jvm-spec-8. Threads and Locks【Second Edition Spec】.md",
+    "jvm-spec-5. Loading, Linking, and Initializing.md",
+    "jvm-spec-3. Compiling for the Java Virtual Machine.md",
     "jvm-spec-2. The Structure of the Java Virtual Machine.md",
+    "jvm-spec-1. Introduction.md",
     "jvm-虚拟机性能监控、故障处理工具总结.md",
     "jvm-类加载流程.md",
     "jvm-解析流程.md",
@@ -167,7 +172,6 @@
     "images/xv6-Pasted image 20241002142130.png",
     "images/oom-Pasted image 20240909195755.png",
     "images/tree-3dd1430368563ef0e4be474e822478d0.jpeg",
-    "redis集群实验.md",
     "images/jvm-3af4ecb7bbe2376bffb9225160a6a0dd.jpg",
     "images/5fb76d3ec9fd434fe46a579d9c1c8a83.jpeg",
     "images/riscv-7630a5e65eaa20a4f697de7b40bba24c.jpeg",
@@ -175,10 +179,6 @@
     "images/m1-pro-72d455dd20ed2ed2273a1cf5544d154c.jpeg",
     "images/docker-12bb9bcf3a20e5eb0255e561a8bacba6.jpeg",
     "images/disk-90a6ee76793cbbf60477e2bf74b58680.jpg",
-    "images",
-    "jvm-spec-1. Introduction.md",
-    "jvm-spec-3. Compiling for the Java Virtual Machine.md",
-    "jvm-spec-5. Loading, Linking, and Initializing.md",
-    "jvm-spec-8. Threads and Locks【Second Edition Spec】.md"
+    "images"
   ]
 }

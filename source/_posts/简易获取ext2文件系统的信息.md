@@ -6,7 +6,7 @@ tags:
   - ext2
 date: 2023-4-26 22:46:49
 ---
-![](https://zincv.oss-cn-hangzhou.aliyuncs.com/images/redis-5fb76d3ec9fd434fe46a579d9c1c8a83.jpeg)
+一个可以在控制台打印出ext2文件系统的结构以及相关信息的程序
 
 我的仓库地址：https://github.com/wwinter117/fetchext2.git
 
